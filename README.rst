@@ -10,13 +10,20 @@
  install
 =========
 
-.. csv-table:: install
-    :header: "dependency", "description"
-    :widths: 15, 10, 30
-
-    "cpython", "C based programming language"
-    "poetry", "python packaging and dependency management"
++------------+--------------------------------------------+
+| dependency | description                                |
++============+============================================+
+| `make`_    | tool for generating executables            |
++------------+--------------------------------------------+
+| `python`_  | C based programming language               |
++------------+--------------------------------------------+
+| `poetry`_  | python packaging and dependency management |
++------------+--------------------------------------------+
 
 =======
  usage
 =======
+
+.. _make: https://www.gnu.org/software/make/
+.. _python: https://www.python.org/
+.. _poetry: https://python-poetry.org/
