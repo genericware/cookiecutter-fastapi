@@ -1,0 +1,7 @@
+
+
+class Settings:
+    ...
+
+
+settings = Settings()

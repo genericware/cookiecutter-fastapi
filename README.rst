@@ -13,11 +13,11 @@
 +------------+--------------------------------------------+
 | dependency | description                                |
 +============+============================================+
-| `make`_    | tool for generating executables            |
+| `make`_    | generates executables                      |
 +------------+--------------------------------------------+
-| `python`_  | C based programming language               |
+| `cpython`_ | programming language                       |
 +------------+--------------------------------------------+
-| `poetry`_  | python packaging and dependency management |
+| `poetry`_  | packaging and dependency management        |
 +------------+--------------------------------------------+
 
 configure ``poetry``::
@@ -35,7 +35,7 @@ configure ``pre-commit``::
 
 run::
 
-    poetry run uvicorn app.main:app --reload
+    poetry run uvicorn app.main:app
 
 docker-build::
 
@@ -63,5 +63,5 @@ pre-commit::
     pre-commit run
 
 .. _make: https://www.gnu.org/software/make/
-.. _python: https://www.python.org/
+.. _cpython: https://www.python.org/
 .. _poetry: https://python-poetry.org/
