@@ -10,12 +10,9 @@ from starlette_zipkin import ZipkinMiddleware, ZipkinConfig, B3Headers
 from uvicorn.protocols.utils import get_path_with_query_string
 
 from app.api.api_v1.api import api_router
-from app.core.config import Settings
+from app.core.config import settings
 from app import __version__
 from app.core.config_logging import setup_logging
-
-# settings
-settings = Settings()
 
 # logging
 setup_logging(json_logs=settings.LOG_JSON_FORMAT)

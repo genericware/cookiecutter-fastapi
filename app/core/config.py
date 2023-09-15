@@ -26,3 +26,6 @@ class Settings(BaseSettings):
     ZIPKIN_HOST: str
     ZIPKIN_PORT: int = 9411
     ZIPKIN_SAMPLE_RATE: float = 0.1
+
+
+settings = Settings()
