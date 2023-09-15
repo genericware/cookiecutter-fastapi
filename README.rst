@@ -13,11 +13,13 @@
 +------------+--------------------------------------------+
 | dependency | description                                |
 +============+============================================+
-| `make`_    | generates executables                      |
-+------------+--------------------------------------------+
 | `cpython`_ | programming language                       |
 +------------+--------------------------------------------+
 | `poetry`_  | packaging and dependency management        |
++------------+--------------------------------------------+
+| `docker`_  | generates executables                      |
++------------+--------------------------------------------+
+| `make`_    | generates executables                      |
 +------------+--------------------------------------------+
 
 configure ``poetry``::
@@ -62,6 +64,8 @@ pre-commit::
 
     pre-commit run
 
-.. _make: https://www.gnu.org/software/make/
+
 .. _cpython: https://www.python.org/
 .. _poetry: https://python-poetry.org/
+.. _docker: https://www.docker.com/
+.. _make: https://www.gnu.org/software/make/
