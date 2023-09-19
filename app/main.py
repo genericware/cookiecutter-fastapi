@@ -21,8 +21,8 @@ access_log: structlog.stdlib.BoundLogger = structlog.stdlib.get_logger("api.acce
 # app
 app = FastAPI(
     debug=settings.DEBUG,
-    title=settings.TITLE,
-    description=settings.DESCRIPTION,
+    title="python-fastapi-app",
+    description="Server application for integration testing.",
     version=__version__,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
@@ -68,24 +68,25 @@ async def logging_middleware(request: Request, call_next) -> Response:
         raise
     finally:
         process_time = time.perf_counter_ns() - start_time
-        status_code = response.status_code
+        sc = response.status_code
         url = get_path_with_query_string(request.scope)  # fixme: unexpected type
-        client_host = request.client.host
-        client_port = request.client.port
-        http_method = request.method
-        http_version = request.scope["http_version"]
+        ch = request.client.host
+        cp = request.client.port
+        hm = request.method
+        hv = request.scope["http_version"]
 
         # uvicorn access log format
+        msg = f"""{ch}:{cp} - "{hm} {url} HTTP/{hv}" {sc}"""
         access_log.info(
-            f"""{client_host}:{client_port} - "{http_method} {url} HTTP/{http_version}" {status_code}""",
+            msg,
             http={
                 "url": str(request.url),
-                "status_code": status_code,
-                "method": http_method,
+                "status_code": sc,
+                "method": hm,
                 "request_id": request_id,
-                "version": http_version,
+                "version": hv,
             },
-            network={"client": {"ip": client_host, "port": client_port}},
+            network={"client": {"ip": ch, "port": cp}},
             duration=process_time,
         )
         response.headers["X-Process-Time"] = str(process_time / 10**9)
