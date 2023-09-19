@@ -1,15 +1,16 @@
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import NullPool
-
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from app.core.config import settings
+import rapidjson as json
+
 
 engine = create_async_engine(
-    ...,  # fixme
+    settings.SQLALCHEMY_DATABASE_URI,
     echo=settings.SQLALCHEMY_ECHO,
-    # pool_pre_ping=settings.SQLALCHEMY_POOL_PRE_PING,
-    # pool_size=settings.SQLALCHEMY_POOL_SIZE,
-    # max_overflow=settings.SQLALCHEMY_MAX_OVERFLOW,
-    poolclass=NullPool,
+    echo_pool=settings.SQLALCHEMY_ECHO_POOL,
+    pool_pre_ping=settings.SQLALCHEMY_POOL_PRE_PING,
+    pool_size=settings.SQLALCHEMY_POOL_SIZE,
+    json_deserializer=json.loads,
+    json_serializer=json.dumps,
+    future=True
 )
-async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+async_session = async_sessionmaker(engine)

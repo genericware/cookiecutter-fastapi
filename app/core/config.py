@@ -1,7 +1,7 @@
 import secrets
 from typing import List
 
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     DEBUG: bool
     LOG_JSON_FORMAT: bool
     LOG_LEVEL: str
+    SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
+    SQLALCHEMY_ECHO: bool
+    SQLALCHEMY_ECHO_POOL: bool
+    SQLALCHEMY_POOL_PRE_PING: bool
+    SQLALCHEMY_POOL_SIZE: int
     POSTGRES_DB: str
     POSTGRES_HOST: str
     POSTGRES_PORT: str

@@ -47,7 +47,7 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
     shared_processors: list[Processor] = [
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,  # todo: remove trailing whitespace from log level
+        structlog.stdlib.add_log_level,  # todo: whitespace
         structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.stdlib.ExtraAdder(),
         drop_color_message_key,
@@ -57,8 +57,8 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
     ]
 
     if json_logs:
-        # We rename the `event` key to `message` only in JSON logs, as Loki looks for the
-        # `message` key but the pretty ConsoleRenderer looks for `event`
+        # We rename the `event` key to `message` only in JSON logs, as Loki looks for
+        # the `message` key but the pretty ConsoleRenderer looks for `event`
         shared_processors.append(rename_event_key)
         # Format the exception only for JSON logs, as we want to pretty-print them when
         # using the ConsoleRenderer
