@@ -1,18 +1,16 @@
-import time
-
 import structlog
-from asgi_correlation_id import CorrelationIdMiddleware, correlation_id
+from asgi_correlation_id import CorrelationIdMiddleware
 import rapidjson as json
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette_prometheus import PrometheusMiddleware, metrics
 from starlette_zipkin import ZipkinMiddleware, ZipkinConfig, B3Headers
-from uvicorn.protocols.utils import get_path_with_query_string
 
 from app.api.api_v1.api import api_router
 from app.core.config import settings
 from app import __version__
 from app.core.config_logging import setup_logging
+from app.core.middleware import AccessLogMiddleware
 
 # logging
 setup_logging(json_logs=settings.LOG_JSON_FORMAT)
@@ -36,8 +34,9 @@ if settings.BACKEND_CORS_ORIGINS:
         CORSMiddleware,
         allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=['*'],
+        allow_headers=['X-Requested-With', 'X-Request-ID'],
+        expose_headers=['X-Request-ID']
     )
 
 # prometheus middleware
@@ -46,52 +45,7 @@ app.add_route("/metrics/", metrics)
 
 
 # logging middleware
-# todo: one-line configuration
-@app.middleware("http")
-async def logging_middleware(request: Request, call_next) -> Response:
-    """
-    Emits essential information for requests.
-    :param request: Request
-    :param call_next:
-    :return: Response
-    """
-    structlog.contextvars.clear_contextvars()
-    request_id = correlation_id.get()
-    structlog.contextvars.bind_contextvars(request_id=request_id)
-
-    start_time = time.perf_counter_ns()
-    response = Response(status_code=500)
-    try:
-        response = await call_next(request)
-    except Exception:
-        structlog.stdlib.get_logger("api.error").exception("Uncaught exception")
-        raise
-    finally:
-        process_time = time.perf_counter_ns() - start_time
-        status_code = response.status_code
-        url = get_path_with_query_string(request.scope)  # fixme: unexpected type
-        client_host = request.client.host
-        client_port = request.client.port
-        http_method = request.method
-        http_version = request.scope["http_version"]
-
-        # uvicorn access log format
-        client_info = f"{client_host}:{client_port}"
-        http_info = f"\"{http_method} {url} HTTP/{http_version}\" {status_code}"
-        access_log.info(
-            f"{client_info} - {http_info}",
-            http={
-                "url": str(request.url),
-                "status_code": status_code,
-                "method": http_method,
-                "request_id": request_id,
-                "version": http_version,
-            },
-            network={"client": {"ip": client_host, "port": client_port}},
-            duration=process_time,
-        )
-        response.headers["X-Process-Time"] = str(process_time / 10**9)
-        return response
+app.add_middleware(AccessLogMiddleware)
 
 # correlation middleware
 app.add_middleware(CorrelationIdMiddleware)
