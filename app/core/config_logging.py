@@ -47,7 +47,7 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
     shared_processors: list[Processor] = [
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,  # todo: whitespace
+        structlog.stdlib.add_log_level,
         structlog.stdlib.PositionalArgumentsFormatter(),
         structlog.stdlib.ExtraAdder(),
         drop_color_message_key,
