@@ -68,25 +68,26 @@ async def logging_middleware(request: Request, call_next) -> Response:
         raise
     finally:
         process_time = time.perf_counter_ns() - start_time
-        sc = response.status_code
+        status_code = response.status_code
         url = get_path_with_query_string(request.scope)  # fixme: unexpected type
-        ch = request.client.host
-        cp = request.client.port
-        hm = request.method
-        hv = request.scope["http_version"]
+        client_host = request.client.host
+        client_port = request.client.port
+        http_method = request.method
+        http_version = request.scope["http_version"]
 
         # uvicorn access log format
-        msg = f"""{ch}:{cp} - "{hm} {url} HTTP/{hv}" {sc}"""
+        client_info = f"{client_host}:{client_port}"
+        http_info = f"\"{http_method} {url} HTTP/{http_version}\" {status_code}"
         access_log.info(
-            msg,
+            f"{client_info} - {http_info}",
             http={
                 "url": str(request.url),
-                "status_code": sc,
-                "method": hm,
+                "status_code": status_code,
+                "method": http_method,
                 "request_id": request_id,
-                "version": hv,
+                "version": http_version,
             },
-            network={"client": {"ip": ch, "port": cp}},
+            network={"client": {"ip": client_host, "port": client_port}},
             duration=process_time,
         )
         response.headers["X-Process-Time"] = str(process_time / 10**9)
