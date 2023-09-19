@@ -1,4 +1,3 @@
-import structlog
 from asgi_correlation_id import CorrelationIdMiddleware
 import rapidjson as json
 from fastapi import FastAPI
@@ -9,12 +8,7 @@ from starlette_zipkin import ZipkinMiddleware, ZipkinConfig, B3Headers
 from app.api.api_v1.api import api_router
 from app.core.config import settings
 from app import __version__
-from app.core.config_logging import setup_logging
 from app.core.middleware import AccessLogMiddleware
-
-# logging
-setup_logging(json_logs=settings.LOG_JSON_FORMAT)
-access_log: structlog.stdlib.BoundLogger = structlog.stdlib.get_logger("api.access")
 
 # app
 app = FastAPI(

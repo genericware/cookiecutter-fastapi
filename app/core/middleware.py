@@ -6,7 +6,7 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from uvicorn.protocols.utils import get_path_with_query_string
 
-from app.main import access_log
+from app.core.config_logging import access_log
 
 
 # todo: integration with asgi-correlation-id

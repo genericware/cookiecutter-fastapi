@@ -5,6 +5,8 @@ import structlog
 from starlette_zipkin.trace import _cur_span_ctx_var
 from structlog.types import EventDict, Processor
 
+from app.core.config import settings
+
 
 # https://github.com/hynek/structlog/issues/35#issuecomment-591321744
 def rename_event_key(_, __, event_dict: EventDict) -> EventDict:
@@ -128,3 +130,8 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
         )
 
     sys.excepthook = handle_exception
+
+
+# config
+setup_logging(json_logs=settings.LOG_JSON_FORMAT)
+access_log: structlog.stdlib.BoundLogger = structlog.stdlib.get_logger("api.access")
