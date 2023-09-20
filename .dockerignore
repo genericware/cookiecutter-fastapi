@@ -1,0 +1,27 @@
+# git
+.git
+.gitignore
+
+# python
+__pycache__
+*.pyo
+*.pyd
+
+# cache
+.cache
+.mypy_cache
+.pytest_cache
+.ruff_cache
+
+# coverage
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# log
+*.log
+
+# configs
+.env
+*.ini
