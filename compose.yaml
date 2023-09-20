@@ -1,0 +1,45 @@
+name: fastapi-app-compose
+
+networks:
+  frontend:
+  backend:
+
+services:
+
+  # todo: next-frontend
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    networks:
+      - frontend
+      - backend
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - LOG_JSON_FORMAT=True
+      - POSTGRES_HOST=postgres
+      - ZIPKIN_HOST=distributor
+
+  postgres:
+    image: postgres:16
+    networks:
+      - backend
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+  # todo: redis
+  # todo: minio
+  # todo: grafana
+  # todo: alertmanager
+  # todo: prometheus
+  # todo: loki
+  # todo: promtail
+  # todo: tempo
