@@ -17,55 +17,67 @@
 +------------+--------------------------------------------+
 | `poetry`_  | packaging and dependency management        |
 +------------+--------------------------------------------+
-| `docker`_  | generates executables                      |
+| `docker`_  | container tools                            |
 +------------+--------------------------------------------+
 | `make`_    | generates executables                      |
 +------------+--------------------------------------------+
 
-configure ``poetry``::
+install::
 
     poetry install
-    poetry shell
-
-configure ``pre-commit``::
-
     pre-commit install
 
 =======
  usage
 =======
 
-run::
+`uvicorn`_::
 
-    poetry run uvicorn app.main:app
+    uvicorn app.main:app
 
-docker-build::
+`gunicorn`_::
+
+    gunicorn app.main:app
+
+`build`_::
 
     docker build .
 
-docker-compose::
+`compose`_::
 
     docker compose up
 
-test::
+`test`_::
 
-    poetry run pytest
+    pytest .
 
-coverage::
+`coverage`_::
 
-    poetry run coverage run -m pytest
-    poetry run coverage report -m
+    coverage run -m pytest
+    coverage report -m
 
-docs::
+`docs`_::
 
-    poetry run make -C docs html
+    make -C docs html
 
-pre-commit::
+`pre-commit`_::
 
     pre-commit run
 
+`ruff`_::
+
+    ruff .
 
 .. _cpython: https://www.python.org/
 .. _poetry: https://python-poetry.org/
 .. _docker: https://www.docker.com/
 .. _make: https://www.gnu.org/software/make/
+.. _uvicorn: https://www.uvicorn.org/
+.. _gunicorn: https://gunicorn.org/
+.. _build: https://docs.docker.com/engine/reference/commandline/build/
+.. _compose: https://docs.docker.com/get-started/08_using_compose/
+.. _test: https://docs.pytest.org/en/7.4.x/
+.. _coverage: https://coverage.readthedocs.io/en/7.3.1/
+.. _docs: https://www.sphinx-doc.org/en/master/
+.. _pre-commit: https://pre-commit.com/
+.. _ruff: https://docs.astral.sh/ruff/

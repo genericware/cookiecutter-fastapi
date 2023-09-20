@@ -1,11 +1,10 @@
 import secrets
-from typing import List
+from typing import List, Any
 
-from pydantic import AnyHttpUrl, PostgresDsn
+from pydantic import AnyHttpUrl, PostgresDsn, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-# todo: pydantic validation
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
@@ -28,6 +27,16 @@ class Settings(BaseSettings):
     ZIPKIN_HOST: str
     ZIPKIN_PORT: int = 9411
     ZIPKIN_SAMPLE_RATE: float = 0.1
+
+    @model_validator(mode="before")
+    def assemble_db_connection(cls, data: Any):
+        return PostgresDsn.build(
+            scheme="postgresql+asyncpg",
+            user=data.get("POSTGRES_USER"),
+            password=data.get("POSTGRES_PASSWORD"),
+            host=data.get("POSTGRES_HOST"),
+            path=f"/{data.get('POSTGRES_DB') or ''}"
+        )
 
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 

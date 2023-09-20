@@ -10,7 +10,6 @@ from app.core.config_logging import access_log
 
 
 # todo: integration with asgi-correlation-id
-# todo: move to package and improve
 class AccessLogMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(

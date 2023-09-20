@@ -11,6 +11,6 @@ engine = create_async_engine(
     pool_size=settings.SQLALCHEMY_POOL_SIZE,
     json_deserializer=json.loads,
     json_serializer=json.dumps,
-    future=True
+    future=True,
 )
-async_session = async_sessionmaker(engine)
+async_session = async_sessionmaker(engine, expire_on_commit=False)
