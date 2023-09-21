@@ -1,5 +1,6 @@
 import logging
 import sys
+
 import rapidjson as json
 import structlog
 from starlette_zipkin.trace import _cur_span_ctx_var

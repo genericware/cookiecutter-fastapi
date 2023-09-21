@@ -3,8 +3,8 @@ from typing import AsyncGenerator
 import structlog
 from fastapi import Depends
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
-from structlog.stdlib import BoundLogger
 from sqlalchemy.ext.asyncio import AsyncSession
+from structlog.stdlib import BoundLogger
 
 from app.db.base_class import Base
 from app.db.session import async_session, engine

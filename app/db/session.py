@@ -1,7 +1,7 @@
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from app.core.config import settings
 import rapidjson as json
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from app.core.config import settings
 
 # todo: use PostgresDsn from pydantic
 engine = create_async_engine(

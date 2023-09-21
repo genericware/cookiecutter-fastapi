@@ -42,7 +42,9 @@ testpaths = [
 ]
 
 [tool.ruff]
-select = ["E", "F"]
+target-version = "py311"
+select = ["E", "F", "I"]
+ignore = []
 
 [build-system]
 requires = ["poetry-core"]

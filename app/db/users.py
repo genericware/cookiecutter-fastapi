@@ -1,16 +1,16 @@
 import uuid
-from fastapi import Request, Depends
-from fastapi_users import UUIDIDMixin, BaseUserManager, FastAPIUsers
+
+from fastapi import Depends, Request
+from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
 from fastapi_users.authentication import (
+    AuthenticationBackend,
     BearerTransport,
     JWTStrategy,
-    AuthenticationBackend,
 )
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 
 from app.api.deps import get_user_db
 from app.models import User
-
 
 # todo: default to random in settings
 SECRET = "SECRET"
