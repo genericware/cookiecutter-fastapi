@@ -139,5 +139,5 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO") -> None:
 
 
 # config
-setup_logging(json_logs=settings.LOG_JSON_FORMAT)
+setup_logging(json_logs=settings.log_json_format)
 access_log: structlog.stdlib.BoundLogger = structlog.stdlib.get_logger("api.access")
