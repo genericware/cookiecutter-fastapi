@@ -1,4 +1,4 @@
-from typing import Generator, AsyncGenerator
+from typing import AsyncGenerator
 
 import structlog
 from fastapi import Depends
@@ -13,27 +13,18 @@ from app.models import User
 log: BoundLogger = structlog.get_logger(__name__)
 
 
-async def get_db() -> Generator[AsyncSession]:
-    """todo"""
-    db: AsyncSession | None = None
-    try:
-        db = async_session()
-        yield db
-    finally:
-        if db is not None:
-            await db.close()
-
-
 async def create_db_and_tables():
+    """todo"""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
-# todo: combine with get_db(...)
-async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """todo"""
     async with async_session() as session:
         yield session
 
 
-async def get_user_db(session: AsyncSession = Depends(get_async_session)):
+async def get_user_db(session: AsyncSession = Depends(get_db)):
+    """todo"""
     yield SQLAlchemyUserDatabase(session, User)

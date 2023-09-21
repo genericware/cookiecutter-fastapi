@@ -23,6 +23,8 @@ services:
       - LOG_JSON_FORMAT=True
       - POSTGRES_HOST=postgres
       - ZIPKIN_HOST=distributor
+    depends_on:
+      - postgres
 
   postgres:
     image: postgres:16

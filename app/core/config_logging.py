@@ -8,13 +8,13 @@ from structlog.types import EventDict, Processor
 from app.core.config import settings
 
 
-# https://github.com/hynek/structlog/issues/35#issuecomment-591321744
 def rename_event_key(_, __, event_dict: EventDict) -> EventDict:
     """
-    Log entries keep the text message in the `event` field, but Datadog
-    uses the `message` field. This processor moves the value from one field to
-    the other.
-    See https://github.com/hynek/structlog/issues/35#issuecomment-591321744
+    Renames the `event` field to `message`.
+    :param _:
+    :param __:
+    :param event_dict:
+    :return:
     """
     event_dict["message"] = event_dict.pop("event")
     return event_dict
@@ -22,15 +22,25 @@ def rename_event_key(_, __, event_dict: EventDict) -> EventDict:
 
 def drop_color_message_key(_, __, event_dict: EventDict) -> EventDict:
     """
-    Uvicorn logs the message a second time in the extra `color_message`, but we don't
-    need it. This processor drops the key from the event dict if it exists.
+    Removes the second message that uvicorn logs named `color_message`.
+    :param _:
+    :param __:
+    :param event_dict:
+    :return:
     """
     event_dict.pop("color_message", None)
     return event_dict
 
 
 def tracer_injection(_, __, event_dict: EventDict) -> EventDict:
-    # get correlation ids from current tracer context
+    """
+    Injects trace and span IDs into log messages.
+    :param _:
+    :param __:
+    :param event_dict:
+    :return:
+    """
+    # retrieve correlation ids from current tracer context
     span = _cur_span_ctx_var.get()
     trace_id, span_id = (
         (span.context.trace_id, span.context.span_id) if span else (None, None)
@@ -43,7 +53,13 @@ def tracer_injection(_, __, event_dict: EventDict) -> EventDict:
     return event_dict
 
 
-def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
+def setup_logging(json_logs: bool = False, log_level: str = "INFO") -> None:
+    """
+    Initializes application logging using structlog.
+    :param json_logs:
+    :param log_level:
+    :return:
+    """
     timestamper = structlog.processors.TimeStamper(fmt="iso")
 
     shared_processors: list[Processor] = [
@@ -59,19 +75,12 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
     ]
 
     if json_logs:
-        # We rename the `event` key to `message` only in JSON logs, as Loki looks for
-        # the `message` key but the pretty ConsoleRenderer looks for `event`
         shared_processors.append(rename_event_key)
-        # Format the exception only for JSON logs, as we want to pretty-print them when
-        # using the ConsoleRenderer
         shared_processors.append(structlog.processors.format_exc_info)
 
     structlog.configure(
         processors=shared_processors
-        + [
-            # Prepare event dict for `ProcessorFormatter`.
-            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
-        ],
+        + [structlog.stdlib.ProcessorFormatter.wrap_for_formatter],
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
@@ -83,43 +92,39 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO"):
         log_renderer = structlog.dev.ConsoleRenderer()
 
     formatter = structlog.stdlib.ProcessorFormatter(
-        # These run ONLY on `logging` entries that do NOT originate within
-        # structlog.
+        # these only run on `logging` entries external to structlog.
         foreign_pre_chain=shared_processors,
-        # These run on ALL entries after the pre_chain is done.
+        # these run on all entries after the pre_chain completes
         processors=[
-            # Remove _record & _from_structlog.
             structlog.stdlib.ProcessorFormatter.remove_processors_meta,
             log_renderer,
         ],
     )
 
     handler = logging.StreamHandler()
-    # Use OUR `ProcessorFormatter` to format all `logging` entries.
     handler.setFormatter(formatter)
     root_logger = logging.getLogger()
     root_logger.addHandler(handler)
     root_logger.setLevel(log_level.upper())
 
     for _log in ["uvicorn", "uvicorn.error"]:
-        # Clear the log handlers for uvicorn loggers, and enable propagation
-        # so the messages are caught by our root logger and formatted correctly
-        # by structlog
+        # clears the log handlers for uvicorn loggers
+        # enables propagation so messages are caught by the root logger
         logging.getLogger(_log).handlers.clear()
         logging.getLogger(_log).propagate = True
 
-    # Since we re-create the access logs ourselves, to add all information
-    # in the structured log (see the `logging_middleware` in main.py), we clear
-    # the handlers and prevent the logs to propagate to a logger higher up in the
-    # hierarchy (effectively rendering them silent).
+    # re-creates the access logs to add all information in the structured log.
+    # prevents logs from propagating to a higher logger, rendering them silent.
     logging.getLogger("uvicorn.access").handlers.clear()
     logging.getLogger("uvicorn.access").propagate = False
 
     def handle_exception(exc_type, exc_value, exc_traceback):
         """
-        Log any uncaught exception instead of letting it be printed by Python
-        (but leave KeyboardInterrupt untouched to allow users to Ctrl+C to stop)
-        See https://stackoverflow.com/a/16993115/3641865
+        Log all uncaught exceptions except for KeyboardInterrupt.
+        :param exc_type:
+        :param exc_value:
+        :param exc_traceback:
+        :return:
         """
         if issubclass(exc_type, KeyboardInterrupt):
             sys.__excepthook__(exc_type, exc_value, exc_traceback)

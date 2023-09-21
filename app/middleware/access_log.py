@@ -11,10 +11,12 @@ from app.core.config_logging import access_log
 
 # todo: integration with asgi-correlation-id
 class AccessLogMiddleware(BaseHTTPMiddleware):
+    """todo"""
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
+        """todo"""
         structlog.contextvars.clear_contextvars()
         request_id = correlation_id.get()
         structlog.contextvars.bind_contextvars(request_id=request_id)
@@ -37,7 +39,7 @@ class AccessLogMiddleware(BaseHTTPMiddleware):
 
             # uvicorn access log format
             client_info = f"{client_host}:{client_port}"
-            http_info = f"\"{http_method} {url} HTTP/{http_version}\" {status_code}"
+            http_info = f'"{http_method} {url} HTTP/{http_version}" {status_code}'
             access_log.info(
                 f"{client_info} - {http_info}",
                 http={

@@ -5,37 +5,12 @@ fail_fast: true
 
 repos:
 
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
-    hooks:
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-      - id: check-case-conflict
-      - id: check-merge-conflict
-      - id: check-added-large-files
-      - id: check-toml
-      - id: check-yaml
-      - id: check-ast
-      - id: check-case-conflict
-      - id: check-docstring-first
-      - id: check-json
-      - id: check-symlinks
-      - id: debug-statements
-      - id: destroyed-symlinks
-
-  - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.10.0
-    hooks:
-      - id: python-check-mock-methods
-      - id: python-no-eval
-      - id: python-no-log-warn
-      - id: python-use-type-annotations
-      - id: rst-directive-colons
-      - id: rst-backticks
-        exclude: ^docs/index.rst$
-      - id: rst-inline-touching-normal
-
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.0.290
     hooks:
       - id: ruff
+
+  - repo: https://github.com/psf/black
+    rev: 23.9.1
+    hooks:
+      - id: black

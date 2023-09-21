@@ -4,7 +4,7 @@ from fastapi_users import UUIDIDMixin, BaseUserManager, FastAPIUsers
 from fastapi_users.authentication import (
     BearerTransport,
     JWTStrategy,
-    AuthenticationBackend
+    AuthenticationBackend,
 )
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 
@@ -17,24 +17,30 @@ SECRET = "SECRET"
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
+    """todo"""
+
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
 
     async def on_after_register(self, user: User, request: Request | None = None):
+        """todo"""
         print(f"User {user.id} has registered.")
 
     async def on_after_forgot_password(
         self, user: User, token: str, request: Request | None = None
     ):
+        """todo"""
         print(f"User {user.id} has forgot their password. Reset token: {token}")
 
     async def on_after_request_verify(
         self, user: User, token: str, request: Request | None = None
     ):
+        """todo"""
         print(f"Verification requested for user {user.id}. Verification token: {token}")
 
 
 async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):
+    """todo"""
     yield UserManager(user_db)
 
 
@@ -42,6 +48,7 @@ bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 
 def get_jwt_strategy() -> JWTStrategy:
+    """todo"""
     return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
 
 

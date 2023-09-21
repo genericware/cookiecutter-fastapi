@@ -1,10 +1,7 @@
-from urllib.parse import urljoin
-
 from asgi_correlation_id import CorrelationIdMiddleware
 import rapidjson as json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_users import fastapi_users
 from starlette_prometheus import PrometheusMiddleware, metrics
 from starlette_zipkin import ZipkinMiddleware, ZipkinConfig, B3Headers
 
@@ -12,9 +9,7 @@ from app.api.api_v1.api import api_router
 from app.api.deps import create_db_and_tables
 from app.core.config import settings
 from app import __version__
-from app.core.middleware import AccessLogMiddleware
-from app.db.users import auth_backend
-from app.schemas.user import UserRead, UserCreate, UserUpdate
+from app.middleware.access_log import AccessLogMiddleware
 
 # app
 app = FastAPI(
@@ -22,7 +17,6 @@ app = FastAPI(
     title="python-fastapi-app",
     description="Server application for integration testing.",
     version=__version__,
-    openapi_url=urljoin(settings.API_V1_STR, "openapi.json")
 )
 
 
@@ -31,35 +25,9 @@ async def on_startup():
     # todo: use alembic instead
     await create_db_and_tables()
 
-# auth
-app.include_router(
-    fastapi_users.get_auth_router(auth_backend),
-    prefix=urljoin(settings.API_V1_STR, "/auth/jwt"),
-    tags=["auth"]
-)
-app.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix=urljoin(settings.API_V1_STR, "/auth"),
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_reset_password_router(),
-    prefix=urljoin(settings.API_V1_STR, "/auth"),
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_verify_router(UserRead),
-    prefix=urljoin(settings.API_V1_STR, "/auth"),
-    tags=["auth"],
-)
-app.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
-    prefix=urljoin(settings.API_V1_STR, "/users"),
-    tags=["users"],
-)
 
-# app routes
-app.include_router(api_router, prefix=settings.API_V1_STR)
+# app api routes
+app.include_router(api_router, prefix="/api/v1")
 
 # cors middleware
 if settings.BACKEND_CORS_ORIGINS:
@@ -67,9 +35,9 @@ if settings.BACKEND_CORS_ORIGINS:
         CORSMiddleware,
         allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
         allow_credentials=True,
-        allow_methods=['*'],
-        allow_headers=['X-Requested-With', 'X-Request-ID'],
-        expose_headers=['X-Request-ID']
+        allow_methods=["*"],
+        allow_headers=["X-Requested-With", "X-Request-ID"],
+        expose_headers=["X-Request-ID"],
     )
 
 # prometheus middleware

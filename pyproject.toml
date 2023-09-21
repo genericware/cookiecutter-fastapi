@@ -41,6 +41,9 @@ testpaths = [
     "tests",
 ]
 
+[tool.ruff]
+select = ["E", "F"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

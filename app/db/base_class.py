@@ -4,4 +4,6 @@ from sqlalchemy.orm import DeclarativeBase
 
 
 class Base(DeclarativeBase):
+    """todo"""
+
     id: Any
