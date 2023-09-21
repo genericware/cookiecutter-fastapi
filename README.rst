@@ -34,7 +34,7 @@ install::
 `uvicorn`_::
 
     docker compose up -d postgres
-    uvicorn app.main:app --reload
+    uvicorn app.main:app
 
 `build`_::
 
