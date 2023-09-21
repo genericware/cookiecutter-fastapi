@@ -31,37 +31,37 @@ install::
  usage
 =======
 
-`uvicorn`_::
+run::
 
     docker compose up -d postgres
     uvicorn app.main:app
 
-`build`_::
+build::
 
     docker build .
 
-`compose`_::
+compose::
 
     docker compose up
 
-`test`_::
+test::
 
     pytest .
 
-`coverage`_::
+coverage::
 
     coverage run -m pytest
     coverage report -m
 
-`docs`_::
+docs::
 
     make -C docs html
 
-`pre-commit`_::
+pre-commit::
 
     pre-commit run
 
-`ruff`_::
+ruff::
 
     ruff .
 
@@ -69,12 +69,3 @@ install::
 .. _poetry: https://python-poetry.org/
 .. _docker: https://www.docker.com/
 .. _make: https://www.gnu.org/software/make/
-.. _uvicorn: https://www.uvicorn.org/
-.. _gunicorn: https://gunicorn.org/
-.. _build: https://docs.docker.com/engine/reference/commandline/build/
-.. _compose: https://docs.docker.com/get-started/08_using_compose/
-.. _test: https://docs.pytest.org/en/7.4.x/
-.. _coverage: https://coverage.readthedocs.io/en/7.3.1/
-.. _docs: https://www.sphinx-doc.org/en/master/
-.. _pre-commit: https://pre-commit.com/
-.. _ruff: https://docs.astral.sh/ruff/
