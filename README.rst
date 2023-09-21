@@ -33,11 +33,8 @@ install::
 
 `uvicorn`_::
 
-    uvicorn app.main:app
-
-`gunicorn`_::
-
-    gunicorn app.main:app
+    docker compose up -d postgres
+    uvicorn app.main:app --reload
 
 `build`_::
 
