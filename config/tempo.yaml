@@ -1,28 +1,14 @@
-search_enabled: true
-metrics_generator_enabled: true
-
 server:
   http_listen_port: 3200
 
-distributor:  # all ports and protocols enabled; only enable needed receivers in production
-  receivers:  # see: https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver
-    jaeger:
-      protocols:
-        thrift_http:
-        grpc:
-        thrift_binary:
-        thrift_compact:
+distributor:
+  receivers:
     zipkin:
-    otlp:
-      protocols:
-        http:
-        grpc:
-    opencensus:
 
 ingester:
-  trace_idle_period: 10s               # if trace has not received during period, flush it
-  max_block_bytes: 1_000_000           # cut the head block when it hits this size or
-  max_block_duration: 5m               # after this much time passes
+  trace_idle_period: 10s
+  max_block_bytes: 1_000_000
+  max_block_duration: 5m
   lifecycler:
     ring:
       replication_factor: 3
