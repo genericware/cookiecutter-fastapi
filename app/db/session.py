@@ -5,7 +5,7 @@ from app.core.config import settings
 
 # todo: use PostgresDsn from pydantic
 engine = create_async_engine(
-    f"postgresql+asyncpg://{settings.postgres_username}:{settings.postgres_password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}",
+    f"postgresql+asyncpg://{settings.postgres_user}:{settings.postgres_password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}",
     echo=settings.sqlalchemy_echo,
     echo_pool=settings.sqlalchemy_echo_pool,
     pool_pre_ping=settings.sqlalchemy_pool_pre_ping,

@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     postgres_db: str
     postgres_host: str
     postgres_port: int
-    postgres_username: str
+    postgres_user: str
     postgres_password: str
     zipkin_service_name: str
     zipkin_host: str
