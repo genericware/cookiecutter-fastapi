@@ -1,0 +1,80 @@
+search_enabled: true
+metrics_generator_enabled: true
+
+server:
+  http_listen_port: 3200
+
+distributor:  # all ports and protocols enabled; only enable needed receivers in production
+  receivers:  # see: https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver
+    jaeger:
+      protocols:
+        thrift_http:
+        grpc:
+        thrift_binary:
+        thrift_compact:
+    zipkin:
+    otlp:
+      protocols:
+        http:
+        grpc:
+    opencensus:
+
+ingester:
+  trace_idle_period: 10s               # if trace has not received during period, flush it
+  max_block_bytes: 1_000_000           # cut the head block when it hits this size or
+  max_block_duration: 5m               # after this much time passes
+  lifecycler:
+    ring:
+      replication_factor: 3
+
+memberlist:
+  abort_if_cluster_join_fails: false
+  bind_port: 7946
+  join_members:
+  - ingester-0:7946
+  - ingester-1:7946
+  - ingester-2:7946
+
+compactor:
+  compaction:
+    block_retention: 1h
+    compacted_block_retention: 10m
+
+query_frontend:
+    query_shards: 2
+
+querier:
+  frontend_worker:
+    frontend_address: query-frontend:9095
+
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+      cluster: docker-compose
+  storage:
+    path: /tmp/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+        send_exemplars: true
+
+storage:
+  trace:
+    backend: s3
+    s3:
+      bucket: tempo
+      endpoint: minio:9000
+      access_key: access_key
+      secret_key: secret_key
+      insecure: true
+    wal:
+      path: /tmp/tempo/wal             # where to store the the wal locally
+      encoding: snappy                 # wal encoding/compression.
+    local:
+      path: /tmp/tempo/blocks
+    pool:
+      max_workers: 100                 # number of parallel requests to the object store backend
+      queue_depth: 10000
+
+overrides:
+  metrics_generator_processors: ['service-graphs', 'span-metrics']

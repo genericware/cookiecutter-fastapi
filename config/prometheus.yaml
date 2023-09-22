@@ -1,0 +1,42 @@
+global:
+  scrape_interval:     5s
+
+scrape_configs:
+
+  - job_name: "prometheus"
+    static_configs:
+      - targets:
+          - "prometheus:9090"
+
+  - job_name: "postgres-exporter"
+    static_configs:
+      - targets:
+          - "postgres-exporter:9187"
+
+  - job_name: 'loki'
+    dns_sd_configs:
+      - names:
+          - loki-read
+          - loki-write
+          - loki-frontend
+        type: A
+        port: 3100
+
+  - job_name: 'promtail'
+    dns_sd_configs:
+      - names:
+          - promtail
+        type: A
+        port: 9080
+
+  - job_name: 'tempo'
+    static_configs:
+      - targets:
+          - 'tempo-compactor:3200'
+          - 'tempo-distributor:3200'
+          - 'tempo-ingester-0:3200'
+          - 'tempo-ingester-1:3200'
+          - 'tempo-ingester-2:3200'
+          - 'tempo-querier:3200'
+          - 'tempo-query-frontend:3200'
+          - 'tempo-metrics-generator:3200'
