@@ -1,18 +1,22 @@
 name: fastapi-app-compose
 
 networks:
-  frontend:
   backend:
 
-services:
+volumes:
+  prometheus:
+  grafana:
+  alertmanager:
 
-  # todo: frontend
+services:
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
       target: development
+    labels:
+      - "promtail=true"
     networks:
       - frontend
       - backend
@@ -28,6 +32,8 @@ services:
 
   postgres:
     image: postgres:latest
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -39,6 +45,7 @@ services:
 
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:latest
+    # todo: promtail label
     networks:
       - backend
     environment:
@@ -48,6 +55,8 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -60,8 +69,25 @@ services:
       - ./config/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yml
       - grafana:/var/lib/grafana
 
+  alertmanager:
+    image: prom/alertmanager:v0.23.0
+    labels:
+      - "promtail=true"
+    networks:
+      - backend
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./config:/config  # todo: clean up
+      - alertmanager:/data
+    command: "--config.file=/config/alertmanager.yml --log.level=debug"
+    restart: unless-stopped
+
+
   prometheus:
     image: prom/prometheus:latest
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -78,6 +104,8 @@ services:
 
   minio:
     image: minio/minio
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -101,6 +129,8 @@ services:
 
   promtail:
     image: grafana/promtail:2.6.1
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -127,6 +157,8 @@ services:
 
   loki-gateway:
     image: nginx:1.19
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -137,6 +169,8 @@ services:
 
   loki-frontend:
     image: grafana/loki:2.6.1
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -151,6 +185,8 @@ services:
 
   loki-read:
     image: grafana/loki:2.6.1
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -166,6 +202,8 @@ services:
 
   loki-write:
     image: grafana/loki:2.6.1
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -181,6 +219,8 @@ services:
 
   tempo-distributor:
     image: grafana/tempo:latest
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -193,6 +233,8 @@ services:
 
   tempo-ingester-0:
     image: grafana/tempo:latest
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -205,6 +247,8 @@ services:
 
   tempo-ingester-1:
     image: grafana/tempo:latest
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -217,6 +261,8 @@ services:
 
   tempo-ingester-2:
     image: grafana/tempo:latest
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -229,6 +275,8 @@ services:
 
   tempo-query-frontend:
     image: grafana/tempo:latest
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -241,6 +289,8 @@ services:
 
   tempo-querier:
     image: grafana/tempo:latest
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -253,6 +303,8 @@ services:
 
   tempo-compactor:
     image: grafana/tempo:latest
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
@@ -265,6 +317,8 @@ services:
 
   tempo-metrics-generator:
     image: grafana/tempo:latest
+    labels:
+      - "promtail=true"
     networks:
       - backend
     ports:
