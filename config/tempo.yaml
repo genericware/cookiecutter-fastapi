@@ -24,7 +24,6 @@ memberlist:
 compactor:
   compaction:
     block_retention: 1h
-    compacted_block_retention: 10m
 
 query_frontend:
     query_shards: 2
@@ -54,13 +53,15 @@ storage:
       secret_key: secret_key
       insecure: true
     wal:
-      path: /tmp/tempo/wal             # where to store the the wal locally
-      encoding: snappy                 # wal encoding/compression.
+      path: /tmp/tempo/wal
+      encoding: snappy
     local:
       path: /tmp/tempo/blocks
     pool:
-      max_workers: 100                 # number of parallel requests to the object store backend
+      max_workers: 100
       queue_depth: 10000
 
 overrides:
-  metrics_generator_processors: ['service-graphs', 'span-metrics']
+  defaults:
+    metrics_generator:
+      processors: ['service-graphs', 'span-metrics']
