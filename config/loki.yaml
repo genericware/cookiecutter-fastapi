@@ -126,7 +126,7 @@ common:
       endpoint: minio:9000
       insecure: true
       bucketnames: loki-data
-      access_key_id: access_key
-      secret_access_key: secret_key
+      access_key_id: admin
+      secret_access_key: testtesttest
       s3forcepathstyle: true
   compactor_address: http://loki-write:3100
