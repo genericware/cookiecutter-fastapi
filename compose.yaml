@@ -97,17 +97,16 @@ services:
       - "--query.lookback-delta=30s"
 
   minio:
-    image: minio/minio
+    image: minio/minio:latest
     labels:
       - "promtail=true"
     networks:
       - backend
     ports:
-      - "9000:9000"
       - "9001:9001"
     environment:
       - MINIO_ROOT_USER=admin
-      - MINIO_ROOT_PASSWORD=testtesttest  # todo: docker secret
+      - MINIO_ROOT_PASSWORD=testtesttest
       - MINIO_PROMETHEUS_AUTH_TYPE=public
       - MINIO_UPDATE=off
     volumes:
@@ -225,7 +224,7 @@ services:
     command: "-target=distributor -config.file=/etc/tempo.yaml"
     restart: always
 
-  tempo-ingester:
+  tempo-ingester-0:
     image: grafana/tempo:latest
     labels:
       - "promtail=true"
@@ -238,9 +237,34 @@ services:
       - ./config/tempo.yaml:/etc/tempo.yaml
     command: "-target=ingester -config.file=/etc/tempo.yaml"
     restart: always
-    deploy:
-      mode: replicated
-      replicas: 3
+
+  tempo-ingester-1:
+    image: grafana/tempo:latest
+    labels:
+      - "promtail=true"
+    networks:
+      - backend
+    ports:
+      - "3200"
+      - "9411"  # zipkin
+    volumes:
+      - ./config/tempo.yaml:/etc/tempo.yaml
+    command: "-target=ingester -config.file=/etc/tempo.yaml"
+    restart: always
+
+  tempo-ingester-2:
+    image: grafana/tempo:latest
+    labels:
+      - "promtail=true"
+    networks:
+      - backend
+    ports:
+      - "3200"
+      - "9411"  # zipkin
+    volumes:
+      - ./config/tempo.yaml:/etc/tempo.yaml
+    command: "-target=ingester -config.file=/etc/tempo.yaml"
+    restart: always
 
   tempo-query-frontend:
     image: grafana/tempo:latest
@@ -250,10 +274,9 @@ services:
       - backend
     ports:
       - "3200:3200"
-      - "9411"  # zipkin
     volumes:
       - ./config/tempo.yaml:/etc/tempo.yaml
-    command: "-target=query-frontend -config.file=/etc/tempo.yaml"
+    command: "-target=query-frontend -config.file=/etc/tempo.yaml -log.level=debug"
     restart: always
 
   tempo-querier:
@@ -264,10 +287,9 @@ services:
       - backend
     ports:
       - "3200"
-      - "9411"  # zipkin
     volumes:
       - ./config/tempo.yaml:/etc/tempo.yaml
-    command: "-target=querier -config.file=/etc/tempo.yaml"
+    command: "-target=querier -config.file=/etc/tempo.yaml -log.level=debug"
     restart: always
 
   tempo-compactor:
@@ -278,7 +300,6 @@ services:
       - backend
     ports:
       - "3200"
-      - "9411"  # zipkin
     volumes:
       - ./config/tempo.yaml:/etc/tempo.yaml
     command: "-target=compactor -config.file=/etc/tempo.yaml"
@@ -292,7 +313,6 @@ services:
       - backend
     ports:
       - "3200"
-      - "9411"  # zipkin
     volumes:
       - ./config/tempo.yaml:/etc/tempo.yaml
     command: "-target=metrics-generator -config.file=/etc/tempo.yaml"

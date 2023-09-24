@@ -1,7 +1,5 @@
 server:
-  http_listen_address: 0.0.0.0
   http_listen_port: 3200
-  grpc_listen_address: 0.0.0.0
   grpc_listen_port: 9095
 
   register_instrumentation: true
@@ -11,11 +9,6 @@ distributor:
     zipkin:
 
 ingester:
-  lifecycler:
-    ring:
-      replication_factor: 3
-  trace_idle_period: 10s
-  max_block_bytes: 1_000_000
   max_block_duration: 5m
 
 memberlist:
@@ -29,9 +22,6 @@ memberlist:
 compactor:
   compaction:
     block_retention: 1h
-
-query_frontend:
-    max_retries: 2
 
 querier:
   frontend_worker:
@@ -60,6 +50,8 @@ storage:
     wal:
       path: /tmp/tempo/wal
       v2_encoding: snappy
+    local:
+      path: /tmp/tempo/blocks
     pool:
       max_workers: 100
       queue_depth: 10000

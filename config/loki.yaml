@@ -7,21 +7,13 @@ analytics:
   reporting_enabled: false
 
 server:
-  http_listen_network: tcp
-  http_listen_address: 0.0.0.0
   http_listen_port: 3100
-  http_listen_conn_limit: 0
-
-  grpc_listen_network: tcp
-  grpc_listen_address: 0.0.0.0
   grpc_listen_port: 9095
-  grpc_listen_conn_limit: 0
 
   register_instrumentation: true
 
   log_format: json
   log_level: info
-
 
 # todo: distributor?
 
@@ -115,10 +107,6 @@ memberlist:
   bind_port: 7946
 
 # todo: runtime_config?
-
-# todo: tracing?
-
-# todo: analytics?
 
 common:
   storage:
