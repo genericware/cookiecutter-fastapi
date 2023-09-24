@@ -1,17 +1,22 @@
 server:
+  http_listen_address: 0.0.0.0
   http_listen_port: 3200
+  grpc_listen_address: 0.0.0.0
+  grpc_listen_port: 9095
+
+  register_instrumentation: true
 
 distributor:
   receivers:
     zipkin:
 
 ingester:
-  trace_idle_period: 10s
-  max_block_bytes: 1_000_000
-  max_block_duration: 5m
   lifecycler:
     ring:
       replication_factor: 3
+  trace_idle_period: 10s
+  max_block_bytes: 1_000_000
+  max_block_duration: 5m
 
 memberlist:
   abort_if_cluster_join_fails: false
@@ -26,7 +31,7 @@ compactor:
     block_retention: 1h
 
 query_frontend:
-    query_shards: 2
+    max_retries: 2
 
 querier:
   frontend_worker:
@@ -54,9 +59,7 @@ storage:
       insecure: true
     wal:
       path: /tmp/tempo/wal
-      encoding: snappy
-    local:
-      path: /tmp/tempo/blocks
+      v2_encoding: snappy
     pool:
       max_workers: 100
       queue_depth: 10000

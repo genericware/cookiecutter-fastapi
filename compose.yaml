@@ -1,10 +1,7 @@
+name: gi
+
 networks:
   backend:
-
-volumes:
-  prometheus:
-  grafana:
-  alertmanager:
 
 services:
 
@@ -64,7 +61,7 @@ services:
       - GF_FEATURE_TOGGLES_ENABLE=tempoSearch tempoBackendSearch tempoServiceGraph
     volumes:
       - ./config/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yml
-      - grafana:/var/lib/grafana
+      - ./.data/grafana:/var/lib/grafana
 
   alertmanager:
     image: prom/alertmanager:v0.23.0
@@ -75,8 +72,8 @@ services:
     ports:
       - "9093:9093"
     volumes:
-      - ./config:/config  # todo: clean up
-      - alertmanager:/data
+      - ./config/alertmanager.yaml:/config/alertmanager.yaml
+      - ./.data/alertmanager:/data
     command: "--config.file=/config/alertmanager.yaml --log.level=debug"
     restart: unless-stopped
 
@@ -91,7 +88,7 @@ services:
       - "9090:9090"
     volumes:
       - ./config/prometheus.yaml:/etc/prometheus/prometheus.yaml
-      - prometheus:/prometheus
+      - ./.data/prometheus:/prometheus
     command:
       - "--log.level=debug"
       - "--config.file=/etc/prometheus/prometheus.yaml"
@@ -109,8 +106,8 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      - MINIO_ACCESS_KEY=access_key
-      - MINIO_SECRET_KEY=secret_key  # todo: docker secret
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=testtesttest  # todo: docker secret
       - MINIO_PROMETHEUS_AUTH_TYPE=public
       - MINIO_UPDATE=off
     volumes:
