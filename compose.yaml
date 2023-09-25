@@ -167,6 +167,25 @@ services:
     volumes:
       - ./config/nginx.conf:/etc/nginx/nginx.conf
 
+  loki-frontend:
+    image: *lokiImage
+    labels:
+      - "promtail=true"
+    networks:
+      - backend
+    ports:
+      - "3100"
+    volumes:
+      - ./config/loki.yaml:/etc/loki/loki.yaml
+    command:
+      - "-config.file=/etc/loki/loki.yaml"
+      - "-target=query-frontend"
+      - "-frontend.downstream-url=http://loki-read:3100"
+    restart: always
+    deploy:
+      mode: replicated
+      replicas: 2
+
   loki-read:
     image: *lokiImage
     labels:
@@ -204,22 +223,6 @@ services:
     deploy:
       mode: replicated
       replicas: 3
-
-  loki-backend:
-    image: *lokiImage
-    labels:
-      - "promtail=true"
-    networks:
-      - backend
-    ports:
-      - "3100"
-      - "7946"
-    volumes:
-      - ./config/loki.yaml:/etc/loki/loki.yaml
-    command:
-      - "-config.file=/etc/loki/loki.yaml"
-      - "-target=backend"
-      - "-legacy-read-mode=false"
 
 #  tempo-distributor:
 #    image: grafana/tempo:latest
