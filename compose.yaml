@@ -225,7 +225,7 @@ services:
 #      replicas: 3
 
   tempo-distributor:
-    image: grafana/tempo:latest
+    image: &tempoImage grafana/tempo:2.2.3
     labels:
       - "promtail=true"
     networks:
@@ -241,7 +241,7 @@ services:
     restart: always
 
   tempo-ingester-0:
-    image: grafana/tempo:latest
+    image: *tempoImage
     labels:
       - "promtail=true"
     networks:
@@ -257,7 +257,7 @@ services:
     restart: always
 
   tempo-ingester-1:
-    image: grafana/tempo:latest
+    image: *tempoImage
     labels:
       - "promtail=true"
     networks:
@@ -273,7 +273,7 @@ services:
     restart: always
 
   tempo-ingester-2:
-    image: grafana/tempo:latest
+    image: *tempoImage
     labels:
       - "promtail=true"
     networks:
@@ -289,7 +289,7 @@ services:
     restart: always
 
   tempo-query-frontend:
-    image: grafana/tempo:latest
+    image: *tempoImage
     labels:
       - "promtail=true"
     networks:
@@ -305,7 +305,7 @@ services:
     restart: always
 
   tempo-querier:
-    image: grafana/tempo:latest
+    image: *tempoImage
     labels:
       - "promtail=true"
     networks:
@@ -321,7 +321,7 @@ services:
     restart: always
 
   tempo-compactor:
-    image: grafana/tempo:latest
+    image: *tempoImage
     labels:
       - "promtail=true"
     networks:
@@ -336,7 +336,7 @@ services:
     restart: always
 
   tempo-metrics-generator:
-    image: grafana/tempo:latest
+    image: *tempoImage
     labels:
       - "promtail=true"
     networks:
