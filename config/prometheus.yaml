@@ -18,7 +18,7 @@ scrape_configs:
       - names:
           - loki-read
           - loki-write
-          - loki-backend
+          - loki-frontend
         type: A
         port: 3100
 
