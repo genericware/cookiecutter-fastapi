@@ -11,37 +11,37 @@ volumes:
 
 services:
 
-#  app:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#      target: development
-#    labels:
-#      - "promtail=true"
-#    networks:
-#      - backend
-#    ports:
-#      - "8000:8000"
-#    env_file: .env
-#    environment:
-#      - LOG_JSON_FORMAT=True
-#      - POSTGRES_HOST=postgres
-#      - ZIPKIN_HOST=distributor
-#    depends_on:
-#      - postgres
-#
-#  postgres:
-#    image: postgres:latest
-#    labels:
-#      - "promtail=true"
-#    networks:
-#      - backend
-#    ports:
-#      - "5432:5432"
-#    environment:
-#      - POSTGRES_DB=${POSTGRES_DB}
-#      - POSTGRES_USER=${POSTGRES_USER}
-#      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # todo: docker secret
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    labels:
+      - "promtail=true"
+    networks:
+      - backend
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - LOG_JSON_FORMAT=True
+      - POSTGRES_HOST=postgres
+      - ZIPKIN_HOST=distributor
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    labels:
+      - "promtail=true"
+    networks:
+      - backend
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # todo: docker secret
 
 #  postgres-exporter:
 #    image: prometheuscommunity/postgres-exporter:latest
@@ -183,7 +183,6 @@ services:
       - "-config.file=/etc/loki/loki.yaml"
       - "-target=query-frontend"
       - "-frontend.downstream-url=http://loki-read:3100"
-    restart: always
     deploy:
       mode: replicated
       replicas: 2
@@ -202,7 +201,6 @@ services:
     command:
       - "-config.file=/etc/loki/loki.yaml"
       - "-target=read"
-    restart: always
     deploy:
       mode: replicated
       replicas: 3
@@ -221,7 +219,6 @@ services:
     command:
       - "-config.file=/etc/loki/loki.yaml"
       - "-target=write"
-    restart: always
     deploy:
       mode: replicated
       replicas: 3
@@ -240,7 +237,6 @@ services:
     command:
       - "-target=distributor"
       - "-config.file=/etc/tempo.yaml"
-    restart: always
     depends_on:
       - minio
 
@@ -258,7 +254,6 @@ services:
     command:
       - "-target=ingester"
       - "-config.file=/etc/tempo.yaml"
-    restart: always
     depends_on:
       - tempo-distributor
 
@@ -276,7 +271,6 @@ services:
     command:
       - "-target=ingester"
       - "-config.file=/etc/tempo.yaml"
-    restart: always
     depends_on:
       - tempo-distributor
 
@@ -294,7 +288,6 @@ services:
     command:
       - "-target=ingester"
       - "-config.file=/etc/tempo.yaml"
-    restart: always
     depends_on:
       - tempo-distributor
 
@@ -312,7 +305,6 @@ services:
       - "-target=query-frontend"
       - "-config.file=/etc/tempo.yaml"
       - "-log.level=debug"
-    restart: always
 
   tempo-querier:
     image: *tempoImage
@@ -328,8 +320,8 @@ services:
       - "-target=querier"
       - "-config.file=/etc/tempo.yaml"
       - "-log.level=debug"
-    restart: always
     depends_on:
+      - minio
       - tempo-query-frontend
 
   tempo-compactor:
@@ -345,7 +337,8 @@ services:
     command:
       - "-target=compactor"
       - "-config.file=/etc/tempo.yaml"
-    restart: always
+    depends_on:
+      - minio
 
   tempo-metrics-generator:
     image: *tempoImage
@@ -360,4 +353,5 @@ services:
     command:
       - "-target=metrics-generator"
       - "-config.file=/etc/tempo.yaml"
-    restart: always
+    depends_on:
+      - minio
