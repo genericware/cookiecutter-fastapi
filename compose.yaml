@@ -142,6 +142,8 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers
       - /var/run/docker.sock:/var/run/docker.sock
     command: -config.file=/etc/promtail/promtail.yaml
+    depends_on:
+      - loki-gateway
 
   loki-init:
     image: &lokiImage grafana/loki:2.9.1
@@ -327,6 +329,8 @@ services:
       - "-config.file=/etc/tempo.yaml"
       - "-log.level=debug"
     restart: always
+    depends_on:
+      - tempo-query-frontend
 
   tempo-compactor:
     image: *tempoImage
