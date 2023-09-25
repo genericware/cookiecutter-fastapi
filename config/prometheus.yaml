@@ -29,14 +29,14 @@ scrape_configs:
         type: A
         port: 9080
 
-#  - job_name: 'tempo'
-#    static_configs:
-#      - targets:
-#          - 'tempo-compactor:3200'
-#          - 'tempo-distributor:3200'
-#          - 'tempo-ingester-0:3200'
-#          - 'tempo-ingester-1:3200'
-#          - 'tempo-ingester-2:3200'
-#          - 'tempo-querier:3200'
-#          - 'tempo-query-frontend:3200'
-#          - 'tempo-metrics-generator:3200'
+  - job_name: 'tempo'
+    static_configs:
+      - targets:
+          - 'tempo-distributor:3200'
+          - 'tempo-ingester-0:3200'
+          - 'tempo-ingester-1:3200'
+          - 'tempo-ingester-2:3200'
+          - 'tempo-query-frontend:3200'
+          - 'tempo-querier:3200'
+          - 'tempo-compactor:3200'
+          - 'tempo-metrics-generator:3200'
