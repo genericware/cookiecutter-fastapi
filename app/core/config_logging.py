@@ -5,7 +5,6 @@ import sys
 # Third-Party --------------------------------------------------------------------------
 import rapidjson as json
 import structlog
-from starlette_zipkin.trace import _cur_span_ctx_var  # noqa
 from structlog.types import EventDict, Processor
 
 # Project ------------------------------------------------------------------------------
@@ -47,11 +46,13 @@ def tracer_injection(_, __, event_dict: EventDict) -> EventDict:
     :param event_dict:
     :return:
     """
+    # todo: use opentelemetry
     # retrieve correlation ids from current tracer context
-    span = _cur_span_ctx_var.get()
-    trace_id, span_id = (
-        (span.context.trace_id, span.context.span_id) if span else (None, None)
-    )
+    # span = _cur_span_ctx_var.get()
+    # trace_id, span_id = (
+    #     (span.context.trace_id, span.context.span_id) if span else (None, None)
+    # )
+    trace_id, span_id = None, None
 
     # add ids to structlog event dictionary
     event_dict["trace_id"] = str(trace_id or 0)

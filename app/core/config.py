@@ -3,7 +3,8 @@ import secrets
 
 # Third-Party --------------------------------------------------------------------------
 from dotenv import find_dotenv
-from pydantic import AnyHttpUrl, Field
+from pydantic import AnyHttpUrl, Field, PostgresDsn
+from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,6 +38,21 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=find_dotenv(".env"), env_file_encoding="utf-8"
     )
+
+    def db_url(self) -> MultiHostUrl:
+        """
+        Create a database url.
+
+        :return:
+        """
+        return PostgresDsn.build(
+            scheme="postgresql+asyncpg",  # todo: enum
+            username=self.postgres_user,
+            password=self.postgres_password,
+            host=self.postgres_host,
+            port=self.postgres_port,
+            path=self.postgres_db,
+        )
 
 
 settings = Settings()
