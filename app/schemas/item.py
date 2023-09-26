@@ -1,3 +1,6 @@
+# Standard Library ---------------------------------------------------------------------
+from uuid import UUID
+
 # Third-Party --------------------------------------------------------------------------
 from pydantic import BaseModel
 
@@ -26,7 +29,7 @@ class ItemInDBBase(ItemBase):
 
     id: int
     title: str
-    owner_id: int
+    owner_id: UUID
 
     class Config:
         orm_mode = True

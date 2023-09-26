@@ -1,5 +1,6 @@
 # Standard Library ---------------------------------------------------------------------
 from collections.abc import Sequence
+from uuid import UUID
 
 # Third-Party --------------------------------------------------------------------------
 from fastapi.encoders import jsonable_encoder
@@ -33,7 +34,7 @@ class CRUDItem(CRUDBase[models.Item, schemas.ItemCreate, schemas.ItemUpdate]):
         return db_obj
 
     async def get_multi_by_owner(
-        self, db: AsyncSession, *, owner_id: int, skip: int = 0, limit: int = 100
+        self, db: AsyncSession, *, owner_id: UUID, skip: int = 0, limit: int = 100
     ) -> Sequence[models.Item]:
         """
         Retrieve items that are owned by a User.
