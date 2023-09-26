@@ -27,10 +27,20 @@ python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
 pytest-asyncio = "^0.21.1"
+pytest-env = "^1.0.1"
+pytest-cov = "^4.1.0"
+pytest-async-sqlalchemy = "^0.2.0"
+pytest-postgresql = "^5.0.0"
+psycopg = {extras = ["binary"], version = "^3.1.11"}
 httpx = "^0.25.0"
+aioresponses = "^0.7.4"
 coverage = {extras = ["toml"], version = "^7.3.1"}
 ruff = "^0.0.290"
+black = "^23.9.1"
+isort = "^5.12.0"
+mypy = "^1.5.1"
 sphinx = "^7.2.6"
+pydocstyle = "^6.3.0"
 cython = "^3.0.2"
 pre-commit = "^3.4.0"
 
@@ -41,11 +51,77 @@ asyncio_mode = "auto"
 testpaths = [
     "tests",
 ]
+postgresql_host = "localhost"
+postgresql_port = "5432"
+postgresql_user = "postgres"
+postgresql_password = "postgres"
+postgresql_dbname = "postgres"
+env = [
+    "ACCESS_TOKEN_EXPIRE_MINUTES=3600",
+    "BACKEND_CORS_ORIGINS=[]",
+    "DEBUG=True",
+    "LOG_JSON_FORMAT=False",
+    "LOG_LEVEL=DEBUG",
+    "SQLALCHEMY_ECHO=True",
+    "SQLALCHEMY_ECHO_POOL=True",
+    "SQLALCHEMY_POOL_PRE_PING=True",
+    "SQLALCHEMY_POOL_SIZE=5",
+    "POSTGRES_DB=postgres",
+    "POSTGRES_HOST=localhost",
+    "POSTGRES_PORT=5432",
+    "POSTGRES_USER=postgres",
+    "POSTGRES_PASSWORD=postgres",
+    "ZIPKIN_SERVICE_NAME=fastapi-app",
+    "ZIPKIN_HOST=localhost",
+    "ZIPKIN_PORT=9411",
+    "ZIPKIN_SAMPLE_RATE=0.1"
+]
+
+[tool.coverage.run]
+omit = [".*", "*/site-packages/*"]
+
+[tool.coverage.report]
+fail_under = 90
+
+[tool.isort]
+py_version = 311
+src_paths = ["app", "tests"]
+skip_glob = ["alembic/*", "docs/*"]
+profile = "black"
+multi_line_output = 3
+balanced_wrapping = "True"
+import_heading_future = "Future Library ------------------------------------------------------------------------"
+import_heading_stdlib = "Standard Library ----------------------------------------------------------------------"
+import_heading_thirdparty = "Third-Party ---------------------------------------------------------------------------"
+import_heading_firstparty = "Project -------------------------------------------------------------------------------"
+import_heading_localfolder = "Local ---------------------------------------------------------------------------------"
+sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'FIRSTPARTY', 'LOCALFOLDER']
 
 [tool.ruff]
 target-version = "py311"
-select = ["E", "F", "I"]
-ignore = []
+select = [
+    # Pyflakes
+    "F",
+    # Pycodestyle
+    "E",
+    "W",
+    # mccabe
+    "C90",
+    # pep8-naming
+    "N",
+    # pydocstyle
+    "D",
+    # pyupgrade
+    "UP"
+]
+ignore = [
+    "D417",  # requires documentation for every function parameter
+]
+src = ["app", "tests"]
+line-length = 88
+
+[tool.ruff.pydocstyle]
+convention = "pep257"
 
 [build-system]
 requires = ["poetry-core"]
