@@ -168,6 +168,9 @@ services:
       - "3100"
     volumes:
       - ./config/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - loki-read
+      - loki-write
 
   loki-frontend:
     image: *lokiImage
@@ -305,6 +308,8 @@ services:
       - "-target=query-frontend"
       - "-config.file=/etc/tempo.yaml"
       - "-log.level=debug"
+    depends_on:
+      - minio
 
   tempo-querier:
     image: *tempoImage
