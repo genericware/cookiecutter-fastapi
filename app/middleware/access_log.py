@@ -1,22 +1,31 @@
+# Standard Library ---------------------------------------------------------------------
 import time
 
+# Third-Party --------------------------------------------------------------------------
 import structlog
 from asgi_correlation_id import correlation_id
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from uvicorn.protocols.utils import get_path_with_query_string
 
+# Project ------------------------------------------------------------------------------
 from app.core.config_logging import access_log
 
 
-# todo: integration with asgi-correlation-id
+# todo: remove/improve
 class AccessLogMiddleware(BaseHTTPMiddleware):
-    """todo"""
+    """Middleware for logging HTTP requests with structlog."""
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
     ) -> Response:
-        """todo"""
+        """
+        Dispatches next request in middleware chain.
+
+        :param request:
+        :param call_next:
+        :return:
+        """
         structlog.contextvars.clear_contextvars()
         request_id = correlation_id.get()
         structlog.contextvars.bind_contextvars(request_id=request_id)
@@ -53,4 +62,6 @@ class AccessLogMiddleware(BaseHTTPMiddleware):
                 duration=process_time,
             )
             response.headers["X-Process-Time"] = str(process_time / 10**9)
+
+            # todo: move out of 'finally'
             return response

@@ -18,8 +18,8 @@ alembic = "^1.12.0"
 sqlalchemy = "^2.0.21"
 asyncpg = "^0.28.0"
 structlog = "^23.1.0"
-starlette-prometheus = "^0.9.0"
-starlette-zipkin = "^0.3.0"
+prometheus-fastapi-instrumentator = "^6.1.0"
+opentelemetry-instrumentation-fastapi = "^0.41b0"
 asgi-correlation-id = "^4.2.0"
 python-rapidjson = "^1.11"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
@@ -90,11 +90,11 @@ skip_glob = ["alembic/*", "docs/*"]
 profile = "black"
 multi_line_output = 3
 balanced_wrapping = "True"
-import_heading_future = "Future Library ------------------------------------------------------------------------"
-import_heading_stdlib = "Standard Library ----------------------------------------------------------------------"
-import_heading_thirdparty = "Third-Party ---------------------------------------------------------------------------"
-import_heading_firstparty = "Project -------------------------------------------------------------------------------"
-import_heading_localfolder = "Local ---------------------------------------------------------------------------------"
+import_heading_future = "Future Library -----------------------------------------------------------------------"
+import_heading_stdlib = "Standard Library ---------------------------------------------------------------------"
+import_heading_thirdparty = "Third-Party --------------------------------------------------------------------------"
+import_heading_firstparty = "Project ------------------------------------------------------------------------------"
+import_heading_localfolder = "Local --------------------------------------------------------------------------------"
 sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'FIRSTPARTY', 'LOCALFOLDER']
 
 [tool.ruff]
@@ -115,7 +115,11 @@ select = [
     "UP"
 ]
 ignore = [
-    "D417",  # requires documentation for every function parameter
+    # pydocstyle
+    "D100",  # missing docstring in public module
+    "D104",  # missing docstring in public package
+    "D106",  # missing docstring in public nested class
+    "D417",  # missing argument description
 ]
 src = ["app", "tests"]
 line-length = 88

@@ -1,10 +1,11 @@
-import rapidjson as json
+# Third-Party --------------------------------------------------------------------------
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette_prometheus import PrometheusMiddleware, metrics
-from starlette_zipkin import B3Headers, ZipkinConfig, ZipkinMiddleware
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from prometheus_fastapi_instrumentator import Instrumentator
 
+# Project ------------------------------------------------------------------------------
 from app import __version__
 from app.api.api_v1.api import api_router
 from app.api.deps import create_db_and_tables
@@ -14,55 +15,43 @@ from app.middleware.access_log import AccessLogMiddleware
 # app
 app = FastAPI(
     debug=settings.debug,
-    title="python-fastapi-app",
-    description="Server application for integration testing.",
+    title=settings.title,
+    description=settings.description,
     version=__version__,
 )
 
-
-@app.on_event("startup")
-async def on_startup():
-    # todo: use alembic instead
-    await create_db_and_tables()
-
-
-# app api routes
-app.include_router(api_router, prefix="/api/v1")
-
 # cors middleware
-if settings.backend_cors_origins:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.backend_cors_origin],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["X-Requested-With", "X-Request-ID"],
-        expose_headers=["X-Request-ID"],
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_allow_origins,
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=settings.cors_allow_methods,
+    allow_headers=settings.cors_allow_headers,
+    expose_headers=settings.cors_expose_headers,
+)
 
-# prometheus middleware
-app.add_middleware(PrometheusMiddleware)
-app.add_route("/metrics/", metrics)
+# metrics middleware
+Instrumentator().instrument(app).expose(app)
 
-
-# logging middleware
+# log middleware
 app.add_middleware(AccessLogMiddleware)
 
 # correlation middleware
 app.add_middleware(CorrelationIdMiddleware)
 
-# zipkin middleware
-# fixme: https://github.com/mchlvl/starlette-zipkin/issues/42
-app.add_middleware(
-    ZipkinMiddleware,
-    config=ZipkinConfig(
-        host=settings.zipkin_host,
-        port=settings.zipkin_port,
-        service_name=settings.zipkin_service_name,
-        sample_rate=settings.zipkin_sample_rate,
-        inject_response_headers=True,
-        force_new_trace=False,
-        json_encoder=json.dumps,
-        header_formatter=B3Headers,
-    ),
-)
+# tracing middleware
+FastAPIInstrumentor.instrument_app(app)
+
+# app routes
+app.include_router(api_router, prefix=settings.api_v1_str)
+
+
+# app start
+@app.on_event("startup")
+async def _startup():
+    """
+    Application start up hook.
+
+    :return:
+    """
+    await create_db_and_tables()

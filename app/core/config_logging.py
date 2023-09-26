@@ -1,17 +1,21 @@
+# Standard Library ---------------------------------------------------------------------
 import logging
 import sys
 
+# Third-Party --------------------------------------------------------------------------
 import rapidjson as json
 import structlog
-from starlette_zipkin.trace import _cur_span_ctx_var
+from starlette_zipkin.trace import _cur_span_ctx_var  # noqa
 from structlog.types import EventDict, Processor
 
+# Project ------------------------------------------------------------------------------
 from app.core.config import settings
 
 
 def rename_event_key(_, __, event_dict: EventDict) -> EventDict:
     """
-    Renames the `event` field to `message`.
+    Rename the `event` field to `message`.
+
     :param _:
     :param __:
     :param event_dict:
@@ -23,7 +27,8 @@ def rename_event_key(_, __, event_dict: EventDict) -> EventDict:
 
 def drop_color_message_key(_, __, event_dict: EventDict) -> EventDict:
     """
-    Removes the second message that uvicorn logs named `color_message`.
+    Remove the second message that uvicorn logs named `color_message`.
+
     :param _:
     :param __:
     :param event_dict:
@@ -36,6 +41,7 @@ def drop_color_message_key(_, __, event_dict: EventDict) -> EventDict:
 def tracer_injection(_, __, event_dict: EventDict) -> EventDict:
     """
     Injects trace and span IDs into log messages.
+
     :param _:
     :param __:
     :param event_dict:
@@ -56,7 +62,8 @@ def tracer_injection(_, __, event_dict: EventDict) -> EventDict:
 
 def setup_logging(json_logs: bool = False, log_level: str = "INFO") -> None:
     """
-    Initializes application logging using structlog.
+    Initialize application logging using structlog.
+
     :param json_logs:
     :param log_level:
     :return:
@@ -122,6 +129,7 @@ def setup_logging(json_logs: bool = False, log_level: str = "INFO") -> None:
     def handle_exception(exc_type, exc_value, exc_traceback):
         """
         Log all uncaught exceptions except for KeyboardInterrupt.
+
         :param exc_type:
         :param exc_value:
         :param exc_traceback:
