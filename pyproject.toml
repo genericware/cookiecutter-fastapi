@@ -35,9 +35,8 @@ psycopg = {extras = ["binary"], version = "^3.1.11"}
 httpx = "^0.25.0"
 aioresponses = "^0.7.4"
 coverage = {extras = ["toml"], version = "^7.3.1"}
-ruff = "^0.0.290"
 black = "^23.9.1"
-isort = "^5.12.0"
+ruff = "^0.0.290"
 mypy = "^1.5.1"
 sphinx = "^7.2.6"
 pydocstyle = "^6.3.0"
@@ -84,49 +83,21 @@ omit = [".*", "*/site-packages/*"]
 [tool.coverage.report]
 fail_under = 90
 
-[tool.isort]
-py_version = 311
-src_paths = ["app", "tests"]
-skip_glob = ["alembic/*", "docs/*"]
-profile = "black"
-multi_line_output = 3
-balanced_wrapping = "True"
-import_heading_future = "Future Library -----------------------------------------------------------------------"
-import_heading_stdlib = "Standard Library ---------------------------------------------------------------------"
-import_heading_thirdparty = "Third-Party --------------------------------------------------------------------------"
-import_heading_firstparty = "Project ------------------------------------------------------------------------------"
-import_heading_localfolder = "Local --------------------------------------------------------------------------------"
-sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'FIRSTPARTY', 'LOCALFOLDER']
+[tool.black]
+target-version = ["py311"]
+line-length = 88
 
 [tool.ruff]
 target-version = "py311"
-select = [
-    # Pyflakes
-    "F",
-    # Pycodestyle
-    "E",
-    "W",
-    # mccabe
-    "C90",
-    # pep8-naming
-    "N",
-    # pydocstyle
-    "D",
-    # pyupgrade
-    "UP"
-]
-ignore = [
-    # pydocstyle
-    "D100",  # missing docstring in public module
-    "D104",  # missing docstring in public package
-    "D106",  # missing docstring in public nested class
-    "D417",  # missing argument description
-]
+select = ["F", "E", "W", "C90", "I", "N", "D", "UP"]
 src = ["app", "tests"]
 line-length = 88
 
 [tool.ruff.pydocstyle]
 convention = "pep257"
+
+[tool.mypy]
+# todo
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,3 +1,4 @@
+# todo: move ./config/ into compose.yaml using cat + eof
 name: gi
 
 networks:
