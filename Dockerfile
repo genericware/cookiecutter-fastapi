@@ -1,4 +1,4 @@
-FROM python:3.11.5-bookworm as python-base
+FROM python:3.11.5-slim-bookworm AS python-base
 
 LABEL maintainer="caerulescens <caerulescens.github@proton.me>"
 
@@ -32,30 +32,31 @@ ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
 # update package manager cache
 RUN apt-get update \
-    && apt-get install -y
+    && apt-get install -y \
+    && apt-get clean
 
-FROM python-base as builder-base
+FROM python-base AS builder-base
 
 # install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - --version $POETRY_VERSION
+RUN curl -sSL https://install.python-poetry.org | python3 - --version "$POETRY_VERSION"
 
 # create pysetup directory
-RUN mkdir -p $PYSETUP_PATH
-WORKDIR $PYSETUP_PATH
+RUN mkdir -p "$PYSETUP_PATH"
+WORKDIR "$PYSETUP_PATH"
 
 # poetry dependencies
 COPY poetry.lock pyproject.toml ./
 RUN poetry install --without dev
 
-FROM python-base as development
-WORKDIR $PYSETUP_PATH
+FROM python-base AS development
+WORKDIR "$PYSETUP_PATH"
 
 # select development image
 ENV FASTAPI_ENV=development
 
 # copy in poetry + virtual environment
-COPY --from=builder-base $POETRY_HOME $POETRY_HOME
-COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
+COPY --from=builder-base "$POETRY_HOME" "$POETRY_HOME"
+COPY --from=builder-base "$PYSETUP_PATH" "$PYSETUP_PATH"
 
 # cache runtime deps for quick builds
 RUN poetry install
@@ -67,13 +68,13 @@ WORKDIR /opt/generic-infrastructure
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
-FROM python-base as production
+FROM python-base AS production
 
 # select production image
 ENV FASTAPI_ENV=production
 
 # copy in virtual environment
-COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
+COPY --from=builder-base "$PYSETUP_PATH" "$PYSETUP_PATH"
 
 # mountpoint
 COPY ./app /opt/generic-infrastructure/app
