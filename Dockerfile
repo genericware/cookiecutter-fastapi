@@ -1,4 +1,4 @@
-FROM python:3.11.5-slim-bookworm AS python-base
+FROM python:3.11.5-bookworm AS python-base
 
 LABEL maintainer="caerulescens <caerulescens.github@proton.me>"
 
@@ -42,21 +42,21 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --version "$POETRY_V
 
 # create pysetup directory
 RUN mkdir -p "$PYSETUP_PATH"
-WORKDIR "$PYSETUP_PATH"
+WORKDIR $PYSETUP_PATH
 
 # poetry dependencies
 COPY poetry.lock pyproject.toml ./
 RUN poetry install --without dev
 
 FROM python-base AS development
-WORKDIR "$PYSETUP_PATH"
+WORKDIR $PYSETUP_PATH
 
 # select development image
 ENV FASTAPI_ENV=development
 
 # copy in poetry + virtual environment
-COPY --from=builder-base "$POETRY_HOME" "$POETRY_HOME"
-COPY --from=builder-base "$PYSETUP_PATH" "$PYSETUP_PATH"
+COPY --from=builder-base $POETRY_HOME $POETRY_HOME
+COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
 
 # cache runtime deps for quick builds
 RUN poetry install
@@ -74,7 +74,7 @@ FROM python-base AS production
 ENV FASTAPI_ENV=production
 
 # copy in virtual environment
-COPY --from=builder-base "$PYSETUP_PATH" "$PYSETUP_PATH"
+COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
 
 # mountpoint
 COPY ./app /opt/generic-infrastructure/app
