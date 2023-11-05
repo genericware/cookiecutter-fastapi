@@ -1,0 +1,104 @@
+[tool.poetry]
+name = "fastapi-app"
+version = "0.1.0"
+description = ""
+authors = ["caerulescens <caerulescens.github@proton.me>"]
+readme = "README.rst"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+gunicorn = "^21.2.0"
+uvicorn = {extras = ["standard"], version = "^0.23.2"}
+uvloop = "^0.17.0"
+fastapi = "^0.103.1"
+fastapi-users = {extras = ["sqlalchemy"], version = "^12.1.2"}
+pydantic = "^2.3.0"
+pydantic-settings = "^2.0.3"
+alembic = "^1.12.0"
+sqlalchemy = "^2.0.21"
+asyncpg = "^0.28.0"
+structlog = "^23.1.0"
+prometheus-fastapi-instrumentator = "^6.1.0"
+opentelemetry-instrumentation-fastapi = "^0.41b0"
+asgi-correlation-id = "^4.2.0"
+python-rapidjson = "^1.11"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.2"
+pytest-asyncio = "^0.21.1"
+pytest-env = "^1.0.1"
+pytest-cov = "^4.1.0"
+pytest-async-sqlalchemy = "^0.2.0"
+pytest-postgresql = "^5.0.0"
+psycopg = {extras = ["binary"], version = "^3.1.11"}
+httpx = "^0.25.0"
+aioresponses = "^0.7.4"
+coverage = {extras = ["toml"], version = "^7.3.1"}
+black = "^23.9.1"
+ruff = "^0.0.290"
+mypy = "^1.5.1"
+sphinx = "^7.2.6"
+pydocstyle = "^6.3.0"
+cython = "^3.0.2"
+pre-commit = "^3.4.0"
+
+[tool.pytest.ini_options]
+minversion = "7.1.1"
+addopts = "-ra -q"
+asyncio_mode = "auto"
+testpaths = [
+    "tests",
+]
+postgresql_host = "localhost"
+postgresql_port = "5432"
+postgresql_user = "postgres"
+postgresql_password = "postgres"
+postgresql_dbname = "postgres"
+env = [
+    'ACCESS_TOKEN_EXPIRE_MINUTES=3600',
+    'CORS_ALLOW_ORIGINS=[]',
+    'CORS_ALLOW_CREDENTIALS=True',
+    'CORS_ALLOW_METHODS=["*"]',
+    'CORS_ALLOW_HEADERS=["X-Requested-With","X-Request-ID"]',
+    'CORS_EXPOSE_HEADERS=["X-Request-ID"]',
+    'DEBUG=True',
+    'LOG_JSON_FORMAT=False',
+    'LOG_LEVEL=DEBUG',
+    'SQLALCHEMY_ECHO=True',
+    'SQLALCHEMY_ECHO_POOL=True',
+    'SQLALCHEMY_POOL_PRE_PING=True',
+    'SQLALCHEMY_POOL_SIZE=5',
+    'POSTGRES_DB=postgres',
+    'POSTGRES_HOST=localhost',
+    'POSTGRES_PORT=5432',
+    'POSTGRES_USER=postgres',
+    'POSTGRES_PASSWORD=postgres',
+    'OTEL_EXCLUDED_URLS="client/.*/info,healthcheck"'
+]
+
+[tool.coverage.run]
+omit = [".*", "*/site-packages/*"]
+
+[tool.coverage.report]
+fail_under = 90
+
+[tool.black]
+target-version = ["py311"]
+line-length = 88
+
+[tool.ruff]
+target-version = "py311"
+select = ["F", "E", "W", "C90", "I", "N", "D", "UP"]
+src = ["app", "tests"]
+line-length = 88
+
+[tool.ruff.pydocstyle]
+convention = "pep257"
+
+[tool.mypy]
+# todo
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
