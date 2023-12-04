@@ -58,3 +58,6 @@ repos:
     rev: v1.5.1
     hooks:
       - id: mypy
+        files: ^(app/|tests/)
+        additional_dependencies:
+          - "pydantic>=1.10.4"

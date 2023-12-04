@@ -9,19 +9,18 @@ readme = "README.rst"
 python = "^3.11"
 gunicorn = "^21.2.0"
 uvicorn = {extras = ["standard"], version = "^0.23.2"}
-uvloop = "^0.17.0"
-fastapi = "^0.103.1"
+uvloop = "^0.19.0"
+fastapi = "^0.104.1"
 fastapi-users = {extras = ["sqlalchemy"], version = "^12.1.2"}
-pydantic = "^2.3.0"
-pydantic-settings = "^2.0.3"
-alembic = "^1.12.0"
-sqlalchemy = "^2.0.21"
-asyncpg = "^0.28.0"
-structlog = "^23.1.0"
+pydantic = "^2.5.2"
+pydantic-settings = "^2.1.0"
+alembic = "^1.13.0"
+sqlalchemy = "^2.0.23"
+asyncpg = "^0.29.0"
 prometheus-fastapi-instrumentator = "^6.1.0"
-opentelemetry-instrumentation-fastapi = "^0.41b0"
+opentelemetry-instrumentation-fastapi = "^0.42b0"
 asgi-correlation-id = "^4.2.0"
-python-rapidjson = "^1.11"
+python-rapidjson = "^1.13"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 
 [tool.poetry.group.dev.dependencies]
@@ -50,32 +49,6 @@ asyncio_mode = "auto"
 testpaths = [
     "tests",
 ]
-postgresql_host = "localhost"
-postgresql_port = "5432"
-postgresql_user = "postgres"
-postgresql_password = "postgres"
-postgresql_dbname = "postgres"
-env = [
-    'ACCESS_TOKEN_EXPIRE_MINUTES=3600',
-    'CORS_ALLOW_ORIGINS=[]',
-    'CORS_ALLOW_CREDENTIALS=True',
-    'CORS_ALLOW_METHODS=["*"]',
-    'CORS_ALLOW_HEADERS=["X-Requested-With","X-Request-ID"]',
-    'CORS_EXPOSE_HEADERS=["X-Request-ID"]',
-    'DEBUG=True',
-    'LOG_JSON_FORMAT=False',
-    'LOG_LEVEL=DEBUG',
-    'SQLALCHEMY_ECHO=True',
-    'SQLALCHEMY_ECHO_POOL=True',
-    'SQLALCHEMY_POOL_PRE_PING=True',
-    'SQLALCHEMY_POOL_SIZE=5',
-    'POSTGRES_DB=postgres',
-    'POSTGRES_HOST=localhost',
-    'POSTGRES_PORT=5432',
-    'POSTGRES_USER=postgres',
-    'POSTGRES_PASSWORD=postgres',
-    'OTEL_EXCLUDED_URLS="client/.*/info,healthcheck"'
-]
 
 [tool.coverage.run]
 omit = [".*", "*/site-packages/*"]
@@ -90,6 +63,7 @@ line-length = 88
 [tool.ruff]
 target-version = "py311"
 select = ["F", "E", "W", "C90", "I", "N", "D", "UP"]
+ignore = ["D100", "D104", "D106"]
 src = ["app", "tests"]
 line-length = 88
 
@@ -97,7 +71,10 @@ line-length = 88
 convention = "pep257"
 
 [tool.mypy]
-# todo
+python_version = "3.11"
+plugins = ["pydantic.mypy"]
+warn_return_any = true
+warn_unused_configs = true
 
 [build-system]
 requires = ["poetry-core"]
