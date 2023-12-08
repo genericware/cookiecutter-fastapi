@@ -1,6 +1,6 @@
-=============
- fastapi-app
-=============
+======================
+ cookiecutter-fastapi
+======================
 
 :Author: caerulescens <caerulescens.github@proton.me>
 :Description:
@@ -19,8 +19,6 @@
 +------------+--------------------------------------------+
 | `docker`_  | container tools                            |
 +------------+--------------------------------------------+
-| `make`_    | generates executables                      |
-+------------+--------------------------------------------+
 
 install::
 
@@ -31,14 +29,17 @@ install::
  usage
 =======
 
-run::
+run(``uvicorn``)::
 
-    docker compose up -d postgres
-    uvicorn app.main:app
+    uvicorn app.main:app --reload
 
-build::
+build(``docker``)::
 
-    docker build .
+    docker build . -t cookiecutter-fastapi:0.1.0
+
+run(``docker``)::
+
+    docker run --init cookiecutter-fastapi:0.1.0
 
 compose::
 
@@ -50,8 +51,7 @@ test::
 
 coverage::
 
-    coverage run -m pytest
-    coverage report -m
+    coverage run -m pytest && coverage report -m
 
 docs::
 
@@ -61,9 +61,18 @@ pre-commit::
 
     pre-commit run
 
+black::
+
+    black .
+
 ruff::
 
     ruff .
+
+mypy::
+
+    mypy .
+
 
 .. _cpython: https://www.python.org/
 .. _poetry: https://python-poetry.org/
