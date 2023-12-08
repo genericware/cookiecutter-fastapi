@@ -1,11 +1,8 @@
-# Standard Library ---------------------------------------------------------------------
 from typing import TYPE_CHECKING
 
-# Third-Party --------------------------------------------------------------------------
 from sqlalchemy import UUID, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-# Project ------------------------------------------------------------------------------
 from app.db.base_class import Base
 
 if TYPE_CHECKING:

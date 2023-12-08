@@ -1,8 +1,7 @@
-# Standard Library ---------------------------------------------------------------------
+import logging
 import uuid
+from collections.abc import AsyncIterator
 
-# Third-Party --------------------------------------------------------------------------
-import structlog
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
 from fastapi_users.authentication import (
@@ -12,12 +11,11 @@ from fastapi_users.authentication import (
 )
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 
-# Project ------------------------------------------------------------------------------
 from app import models
 from app.api.deps import get_user_db
-from app.core.config import settings
+from app.config import settings
 
-logger = structlog.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
@@ -28,7 +26,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
 
     async def on_after_register(
         self, user: models.User, request: Request | None = None
-    ):
+    ) -> None:
         """
         Run after a User registers.
 
@@ -42,7 +40,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
 
     async def on_after_forgot_password(
         self, user: models.User, token: str, request: Request | None = None
-    ):
+    ) -> None:
         """
         Run after a User forgets their password.
 
@@ -57,7 +55,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
 
     async def on_after_request_verify(
         self, user: models.User, token: str, request: Request | None = None
-    ):
+    ) -> None:
         """
         Run after a User requests to verify.
 
@@ -73,7 +71,9 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
         )
 
 
-async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):
+async def get_user_manager(
+    user_db: SQLAlchemyUserDatabase = Depends(get_user_db),
+) -> AsyncIterator[UserManager]:
     """
     Retrieve the user manager.
 

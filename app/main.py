@@ -1,24 +1,26 @@
-# Third-Party --------------------------------------------------------------------------
-from asgi_correlation_id import CorrelationIdMiddleware
+import sys
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from prometheus_fastapi_instrumentator import Instrumentator
 
-# Project ------------------------------------------------------------------------------
 from app import __version__
-from app.api.api_v1.api import api_router
-from app.api.deps import create_db_and_tables
-from app.core.config import settings
-from app.middleware.access_log import AccessLogMiddleware
+from app.api.v1 import api as api_v1
+from app.config import settings
 
 # app
 app = FastAPI(
-    debug=settings.debug,
-    title=settings.title,
-    description=settings.description,
+    debug=settings.fastapi_debug,
+    title=settings.fastapi_title,
+    description=settings.fastapi_description,
     version=__version__,
 )
+
+# logging
+logger.add(sys.stderr, format=settings.loguru_format, level=settings.loguru_level)
 
 # cors middleware
 app.add_middleware(
@@ -33,25 +35,24 @@ app.add_middleware(
 # metrics middleware
 Instrumentator().instrument(app).expose(app)
 
-# log middleware
-app.add_middleware(AccessLogMiddleware)
-
-# correlation middleware
-app.add_middleware(CorrelationIdMiddleware)
-
 # tracing middleware
 FastAPIInstrumentor.instrument_app(app)
 
 # app routes
-app.include_router(api_router, prefix=settings.api_v1_str)
+app.include_router(api_v1.router)
 
-
-# app start
-@app.on_event("startup")
-async def _startup():
-    """
-    Application start up hook.
-
-    :return:
-    """
-    await create_db_and_tables()
+if __name__ == "__main__":
+    uvicorn.run(
+        app=app,
+        host=settings.uvicorn_host,
+        port=settings.uvicorn_port,
+        workers=settings.uvicorn_workers,
+        log_level=settings.uvicorn_log_level,
+        loop=settings.uvicorn_loop,
+        http=settings.uvicorn_http,
+        ws=settings.uvicorn_ws,
+        interface=settings.uvicorn_interface,
+        backlog=settings.uvicorn_backlog,
+        timeout_keep_alive=settings.uvicorn_timeout_keep_alive,
+        timeout_graceful_shutdown=settings.uvicorn_timeout_graceful_shutdown,
+    )

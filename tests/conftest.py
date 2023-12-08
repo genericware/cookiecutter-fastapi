@@ -1,21 +1,17 @@
-# Standard Library ---------------------------------------------------------------------
 import asyncio
 import sys
 from asyncio import AbstractEventLoop
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
-# Third-Party --------------------------------------------------------------------------
 import pytest
 from aioresponses import aioresponses
 from fastapi.testclient import TestClient
-from pydantic import PostgresDsn
 
-# Project ------------------------------------------------------------------------------
 from app.main import app
 
 
 @pytest.fixture(scope="session")
-def event_loop() -> AbstractEventLoop:
+def event_loop() -> Iterator[AbstractEventLoop]:
     """
     Create an event loop.
 
@@ -37,25 +33,18 @@ def event_loop() -> AbstractEventLoop:
 
 
 @pytest.fixture(scope="session")
-def _database_url(postgres_proc) -> str:
+def _database_url() -> str:
     """
     Build a database url.
 
-    :param postgres_proc:
     :return:
     """
-    return PostgresDsn.build(
-        scheme="postgresql+asyncpg",
-        username=postgres_proc.user,
-        password=postgres_proc.password,
-        hosts=postgres_proc.host,
-        port=f"{postgres_proc.port}",
-        path=f"/{postgres_proc.dbname or ''}",
-    )
+    ...
+    return ""
 
 
 @pytest.fixture(scope="session")
-def init_database() -> Callable:
+def init_database() -> Callable[..., None]:
     """
     Initialize a test fixture using sqlalchemy.
 
@@ -67,7 +56,7 @@ def init_database() -> Callable:
 
 
 @pytest.fixture(scope="session")
-def server_api() -> TestClient:
+def server_api() -> Iterator[TestClient]:
     """
     FastAPI TestClient fixture.
 
@@ -78,7 +67,7 @@ def server_api() -> TestClient:
 
 
 @pytest.fixture
-def mock_response() -> aioresponses:
+def mock_response() -> Iterator[aioresponses]:
     """
     Async HTTP response mocker.
 

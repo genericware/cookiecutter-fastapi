@@ -1,7 +1,5 @@
-# Standard Library ---------------------------------------------------------------------
 from uuid import UUID
 
-# Third-Party --------------------------------------------------------------------------
 from pydantic import BaseModel
 
 

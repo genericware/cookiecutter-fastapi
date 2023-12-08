@@ -1,22 +1,21 @@
-# Standard Library ---------------------------------------------------------------------
 from collections.abc import Sequence
 from uuid import UUID
 
-# Third-Party --------------------------------------------------------------------------
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# Project ------------------------------------------------------------------------------
 from app import models, schemas
 from app.crud.base import CRUDBase
+from app.models.item import Item
+from app.schemas.item import ItemCreate, ItemUpdate
 
 
-class CRUDItem(CRUDBase[models.Item, schemas.ItemCreate, schemas.ItemUpdate]):
+class CRUDItem(CRUDBase[Item, ItemCreate, ItemUpdate]):
     """Item create, read, update, delete actions."""
 
     async def create_with_owner(
-        self, db: AsyncSession, *, obj_in: schemas.ItemCreate, owner_id: int
+        self, db: AsyncSession, *, obj_in: schemas.ItemCreate, owner_id: UUID
     ) -> models.Item:
         """
         Create an Item that is owned by a User.

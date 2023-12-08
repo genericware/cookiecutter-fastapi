@@ -1,14 +1,11 @@
-# Standard Library ---------------------------------------------------------------------
 from collections.abc import Sequence
 from typing import Any, Generic, TypeVar
 
-# Third-Party --------------------------------------------------------------------------
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# Project ------------------------------------------------------------------------------
 from app.db.base_class import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -72,7 +69,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db: AsyncSession,
         *,
         db_obj: ModelType,
-        obj_in: UpdateSchemaType | dict[str, Any]
+        obj_in: UpdateSchemaType | dict[str, Any],
     ) -> ModelType:
         """
         Update a row.

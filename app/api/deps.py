@@ -1,18 +1,12 @@
-# Standard Library ---------------------------------------------------------------------
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 
-# Third-Party --------------------------------------------------------------------------
-import structlog
 from fastapi import Depends
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# Project ------------------------------------------------------------------------------
 from app.db.base_class import Base
 from app.db.session import async_session, engine
 from app.models import User
-
-logger = structlog.get_logger(__name__)
 
 
 # todo: use alembic
@@ -38,7 +32,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def get_user_db(
     session: AsyncSession = Depends(get_db),
-) -> SQLAlchemyUserDatabase:
+) -> AsyncIterator[SQLAlchemyUserDatabase]:
     """
     Retrieve the user database.
 

@@ -1,17 +1,12 @@
-# Standard Library ---------------------------------------------------------------------
 from typing import Any
 
-# Third-Party --------------------------------------------------------------------------
-import structlog
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# Project ------------------------------------------------------------------------------
 from app import crud, schemas
 from app.api import deps
 from app.db.users import current_active_user
 
-logger = structlog.get_logger(__name__)
 router = APIRouter()
 
 
@@ -37,7 +32,7 @@ async def create_item(
     *,
     db: AsyncSession = Depends(deps.get_db),
     item_in: schemas.ItemCreate,
-    current_user: schemas.UserRead = Depends(current_active_user)
+    current_user: schemas.UserRead = Depends(current_active_user),
 ) -> Any:
     """Create an item."""
     item = await crud.item.create_with_owner(
@@ -52,14 +47,14 @@ async def update_item(
     db: AsyncSession = Depends(deps.get_db),
     id: int,
     item_in: schemas.ItemUpdate,
-    current_user: schemas.UserRead = Depends(current_active_user)
+    current_user: schemas.UserRead = Depends(current_active_user),
 ) -> Any:
     """Update an item."""
     item = await crud.item.get(db=db, id=id)
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404)
     if not current_user.is_superuser and (item.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+        raise HTTPException(status_code=400)
     item = await crud.item.update(db=db, db_obj=item, obj_in=item_in)
     return item
 
@@ -69,14 +64,14 @@ async def read_item(
     *,
     db: AsyncSession = Depends(deps.get_db),
     id: int,
-    current_user: schemas.UserRead = Depends(current_active_user)
+    current_user: schemas.UserRead = Depends(current_active_user),
 ) -> Any:
     """Read an item."""
     item = await crud.item.get(db=db, id=id)
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404)
     if not current_user.is_superuser and (item.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+        raise HTTPException(status_code=400)
     return item
 
 
@@ -85,13 +80,13 @@ async def delete_item(
     *,
     db: AsyncSession = Depends(deps.get_db),
     id: int,
-    current_user: schemas.UserRead = Depends(current_active_user)
+    current_user: schemas.UserRead = Depends(current_active_user),
 ) -> Any:
     """Delete an item."""
     item = await crud.item.get(db=db, id=id)
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404)
     if not current_user.is_superuser and (item.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+        raise HTTPException(status_code=400)
     item = await crud.item.remove(db=db, id=id)
     return item
