@@ -28,6 +28,7 @@ repos:
       - id: fix-byte-order-marker
       - id: mixed-line-ending
       - id: no-commit-to-branch
+        args: ['--branch', 'master', '--branch', 'develop']
       - id: trailing-whitespace
 
   - repo: https://github.com/pre-commit/pygrep-hooks
