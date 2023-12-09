@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     uvicorn_host: str = Field(...)
     uvicorn_port: int = Field(...)
     uvicorn_workers: int = Field(...)
-    uvicorn_log_level: str = Field(...)
+    uvicorn_log_level: Literal["critical", "error", "warning", "info", "debug", "trace"] = Field(...)
     uvicorn_loop: Literal["none", "auto", "asyncio", "uvloop"] = Field(...)
     uvicorn_http: Literal["auto", "h11", "httptools"] = Field(...)
     uvicorn_ws: Literal["auto", "none", "websockets"] = Field(...)

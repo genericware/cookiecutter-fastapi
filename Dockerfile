@@ -77,6 +77,9 @@ CMD ["uvicorn", "app.main:app"]
 
 FROM base AS production
 
+# todo: silent logs
+#ENV UVICORN_LOG_LEVEL=warning
+
 COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
 
 WORKDIR /opt/generic-infrastructure

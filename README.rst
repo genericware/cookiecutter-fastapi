@@ -42,11 +42,11 @@ package::
 
 image (development)::
 
-    docker build . --target development --tag cookiecutter-fastapi-development:0.1.0
+    docker build . -t cookiecutter-fastapi-development:0.1.0 --target development
 
 image (production)::
 
-    docker build . --target production --tag cookiecutter-fastapi-production:0.1.0
+    docker build . -t cookiecutter-fastapi-production:0.1.0 --target production
 
 =====
  run
@@ -54,13 +54,13 @@ image (production)::
 
 app::
 
-    uvicorn app.main:app
+    python -m app
 
 container::
 
-    docker run --init cookiecutter-fastapi:0.1.0
+    docker run --init cookiecutter-fastapi-development:0.1.0
 
-compose::
+stack::
 
     docker compose up
 
