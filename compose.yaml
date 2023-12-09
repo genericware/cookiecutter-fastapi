@@ -1,4 +1,4 @@
-name: generic-infrastructure
+name: gi
 
 networks:
   backend:
