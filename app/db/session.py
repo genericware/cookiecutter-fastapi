@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.config import settings
 
 engine = create_async_engine(
-    url=settings.sqlalchemy_dsn,
+    url=str(settings.sqlalchemy_dsn),
     echo=settings.sqlalchemy_echo,
     echo_pool=settings.sqlalchemy_echo_pool,
     pool_pre_ping=settings.sqlalchemy_pool_pre_ping,

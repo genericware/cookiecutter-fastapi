@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
     """FastAPI Users manager."""
 
-    reset_password_token_secret = settings.secret_key
-    verification_token_secret = settings.secret_key
+    reset_password_token_secret = settings.fastapi_secret_key
+    verification_token_secret = settings.fastapi_secret_key
 
     async def on_after_register(
         self, user: models.User, request: Request | None = None
