@@ -54,7 +54,7 @@ image (production)::
 
 app::
 
-    python -m app
+    uvicorn app.main:app
 
 container::
 

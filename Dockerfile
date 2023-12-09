@@ -83,7 +83,7 @@ COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
 
 WORKDIR /opt/generic-infrastructure
 
-COPY /app /app
+COPY /app ./app
 
 EXPOSE 8000
 
