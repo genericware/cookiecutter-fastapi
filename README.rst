@@ -3,41 +3,56 @@
 ======================
 
 :Author: caerulescens <caerulescens.github@proton.me>
-:Description:
+:Description: ``cookiecutter`` template for ``fastapi``
 
+==============
+ dependencies
+==============
+
++------------+--------------------------------------------+
+| dependency | description                                |
++============+============================================+
+| `pyenv`_   | python version management                  |
++------------+--------------------------------------------+
+| `poetry`_  | python packaging and dependency management |
++------------+--------------------------------------------+
+| `docker`_  | cross-platform container tools             |
++------------+--------------------------------------------+
 
 =========
  install
 =========
 
-+------------+--------------------------------------------+
-| dependency | description                                |
-+============+============================================+
-| `cpython`_ | programming language                       |
-+------------+--------------------------------------------+
-| `poetry`_  | packaging and dependency management        |
-+------------+--------------------------------------------+
-| `docker`_  | container tools                            |
-+------------+--------------------------------------------+
-
-install::
+development::
 
     poetry install
     pre-commit install
 
+production::
+
+    poetry install --without dev
+
 =======
- usage
+ build
 =======
 
-run(``uvicorn``)::
+package::
 
-    uvicorn app.main:app --reload
+    todo
 
-build(``docker``)::
+image::
 
     docker build . -t cookiecutter-fastapi:0.1.0
 
-run(``docker``)::
+=====
+ run
+=====
+
+app::
+
+    uvicorn app.main:app
+
+container::
 
     docker run --init cookiecutter-fastapi:0.1.0
 
@@ -45,7 +60,7 @@ compose::
 
     docker compose up
 
-test::
+tests::
 
     pytest .
 
@@ -57,24 +72,22 @@ docs::
 
     make -C docs html
 
-pre-commit::
+checks::
 
     pre-commit run
 
-black::
+formating::
 
     black .
 
-ruff::
+linting::
 
     ruff .
 
-mypy::
+analysis::
 
     mypy .
 
-
-.. _cpython: https://www.python.org/
-.. _poetry: https://python-poetry.org/
-.. _docker: https://www.docker.com/
-.. _make: https://www.gnu.org/software/make/
+.. _pyenv: https://github.com/pyenv
+.. _poetry: https://github.com/python-poetry
+.. _docker: https://github.com/docker

@@ -1,7 +1,11 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "cookiecutter-fastapi"
 version = "0.1.0"
-description = ""
+description = "cookiecutter template for fastapi"
 authors = ["caerulescens <caerulescens.github@proton.me>"]
 readme = "README.rst"
 
@@ -43,9 +47,7 @@ pre-commit = "^3.4.0"
 minversion = "7.1.1"
 addopts = "-ra -q"
 asyncio_mode = "auto"
-testpaths = [
-    "tests",
-]
+testpaths = ["tests"]
 
 [tool.coverage.run]
 omit = [".*", "*/site-packages/*"]
@@ -84,7 +86,3 @@ init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
 warn_untyped_fields = true
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"

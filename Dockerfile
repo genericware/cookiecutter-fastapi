@@ -1,83 +1,87 @@
-FROM python:3.11.5-bookworm AS python-base
+FROM python:3.11-slim-bookworm AS base
 
 LABEL maintainer="caerulescens <caerulescens.github@proton.me>"
 
-ENV PYTHONUNBUFFERED=1 \
-    # prevent .pyc files
-    PYTHONDONTWRITEBYTECODE=1 \
-    \
-    # pip environment variables
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
+ENV \
+    # os
+    TZ=UTC \
+    DEBIAN_FRONTEND=noninteractive \
+    DEBCONF_NOWARNINGS=yes \
+    PYSETUP_PATH=/opt/pysetup \
+    VENV_PATH=/opt/pysetup/.venv \
+    # python
+    PYTHONUNBUFFERED=true \
+    PYTHONDONTWRITEBYTECODE=true \
+    PYTHONFAULTHANDLER=true \
+    PYTHONHASHSEED=random \
+    # pip
+    PIP_NO_CACHE_DIR=true \
+    PIP_DISABLE_PIP_VERSION_CHECK=true \
     PIP_DEFAULT_TIMEOUT=100 \
-    \
-    # poetry environment variables
-    # see https://python-poetry.org/docs/configuration/#using-environment-variables
-    POETRY_VERSION=1.6.1 \
-    # install poetry at this location
-    POETRY_HOME="/opt/poetry" \
-    # create a virtual environment in the project's root
+    # poetry
+    POETRY_VERSION=1.7.1 \
+    POETRY_HOME=/opt/poetry \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
+    POETRY_VIRTUALENVS_OPTIONS_NO_PIP=true \
+    POETRY_INSTALLER_MODERN_INSTALLATION=true \
+    POETRY_NO_INTERACTION=true \
+    POETRY_NO_ANSI=true \
+    POETRY_INSTALLER_PARALLEL=true \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
-    # skip interactive questions
-    POETRY_NO_INTERACTION=1 \
-    DEBCONF_NOWARNINGS="yes" \
-    \
-    # paths
-    PYSETUP_PATH="/opt/pysetup" \
-    VENV_PATH="/opt/pysetup/.venv" \
-    TZ="UTC"
+    POETRY_VIRTUALENVS_CREATE=true \
+    # uvicorn
+    UVICORN_HOST=0.0.0.0 \
+    UVICORN_PORT=8000 \
+    UVICORN_WORKERS=1 \
+    UVICORN_LOG_LEVEL=DEBUG \
+    UVICORN_LOOP=auto \
+    UVICORN_HTTP=auto \
+    UVICORN_WS=auto \
+    UVICORN_INTERFACE=auto \
+    UVICORN_BACKLOG=2048 \
+    UVICORN_TIMEOUT_KEEP_ALIVE=5 \
+    UVICORN_TIMEOUT_GRACEFUL_SHUTDOWN=30
 
-# prepend poetry and venv to path
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
-# update package manager cache
 RUN apt-get update \
-    && apt-get install -y \
+    && apt-get install --no-install-recommends --assume-yes \
     && apt-get clean
 
-FROM python-base AS builder-base
+FROM base AS builder
 
-# install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 - --version "$POETRY_VERSION"
+RUN pip install 'poetry==$POETRY_VERSION'
 
-# create pysetup directory
-RUN mkdir -p "$PYSETUP_PATH"
 WORKDIR $PYSETUP_PATH
 
-# poetry dependencies
 COPY poetry.lock pyproject.toml ./
-RUN poetry install --without dev
 
-FROM python-base AS development
-WORKDIR $PYSETUP_PATH
+#RUN poetry install --without dev && rm -rf $POETRY_CACHE_DIR
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --no-root
 
-# select development image
-ENV FASTAPI_ENV=development
+FROM base AS development
 
-# copy in poetry + virtual environment
 COPY --from=builder-base $POETRY_HOME $POETRY_HOME
 COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
 
-# cache runtime deps for quick builds
 RUN poetry install
 
-# mountpoint
-COPY ./app /opt/generic-infrastructure/app
 WORKDIR /opt/generic-infrastructure
+
+COPY /app /app
 
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
-FROM python-base AS production
+CMD ["uvicorn", "app.main:app"]
 
-# select production image
-ENV FASTAPI_ENV=production
+FROM base AS production
 
-# copy in virtual environment
-COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
+COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
 
-# mountpoint
-COPY ./app /opt/generic-infrastructure/app
 WORKDIR /opt/generic-infrastructure
 
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "app.main:app", "-b", "0.0.0.0:8000", "--workers", "4", "--timeout", "14400"]
+COPY /app /app
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app"]
