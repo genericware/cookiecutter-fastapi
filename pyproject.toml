@@ -3,7 +3,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "cookiecutter-fastapi"
+name = "app"
 version = "0.1.0"
 description = "cookiecutter template for fastapi"
 authors = ["caerulescens <caerulescens.github@proton.me>"]
@@ -53,18 +53,19 @@ testpaths = ["tests"]
 omit = [".*", "*/site-packages/*"]
 
 [tool.coverage.report]
-fail_under = 90
+fail_under = 95
 
 [tool.black]
-target-version = ["py311"]
 line-length = 88
+target-version = ["py311"]
+include = '\.pyi?$'
 
 [tool.ruff]
+line-length = 88
 target-version = "py311"
+src = ["app", "tests"]
 select = ["F", "E", "W", "C90", "S", "I", "N", "D", "UP"]
 ignore = ["D100", "D104", "D106"]
-src = ["app", "tests"]
-line-length = 88
 
 [tool.ruff.pydocstyle]
 convention = "pep257"
