@@ -2,7 +2,7 @@ import secrets
 from enum import Enum
 from typing import Literal
 
-from pydantic import AnyHttpUrl, Field, field_validator, ValidationInfo, PostgresDsn
+from pydantic import AnyHttpUrl, Field, PostgresDsn, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -37,7 +37,9 @@ class Settings(BaseSettings):
     uvicorn_host: str = Field(...)
     uvicorn_port: int = Field(...)
     uvicorn_workers: int = Field(...)
-    uvicorn_log_level: Literal["critical", "error", "warning", "info", "debug", "trace"] = Field(...)
+    uvicorn_log_level: Literal[
+        "critical", "error", "warning", "info", "debug", "trace"
+    ] = Field(...)
     uvicorn_loop: Literal["none", "auto", "asyncio", "uvloop"] = Field(...)
     uvicorn_http: Literal["auto", "h11", "httptools"] = Field(...)
     uvicorn_ws: Literal["auto", "none", "websockets"] = Field(...)
@@ -75,19 +77,27 @@ class Settings(BaseSettings):
 
     @field_validator("sqlalchemy_dsn", mode="before")
     @classmethod
-    def build_sqlalchemy_dsn(cls, v: str | None, info: ValidationInfo) -> str | PostgresDsn:
+    def build_sqlalchemy_dsn(
+        cls, v: str | None, info: ValidationInfo
+    ) -> str | PostgresDsn:
+        """
+        Build SQLAlchemy's DSN.
 
+        :param v:
+        :param info:
+        :return:
+        """
         if isinstance(v, str):
             return v
 
         return PostgresDsn.build(
-                scheme=info.data["sqlalchemy_scheme"],
-                username=info.data["sqlalchemy_username"],
-                password=info.data["sqlalchemy_password"],
-                host=info.data["sqlalchemy_host"],
-                port=info.data["sqlalchemy_port"],
-                path=info.data["sqlalchemy_path"]
-            )
+            scheme=info.data["sqlalchemy_scheme"],
+            username=info.data["sqlalchemy_username"],
+            password=info.data["sqlalchemy_password"],
+            host=info.data["sqlalchemy_host"],
+            port=info.data["sqlalchemy_port"],
+            path=info.data["sqlalchemy_path"],
+        )
 
 
 settings = Settings()
