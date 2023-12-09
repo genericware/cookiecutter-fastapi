@@ -7,7 +7,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app import __version__
-from app.api.v1 import api as api_v1
+from app.api.v1 import routers as api_v1
 from app.config import settings
 
 # app
