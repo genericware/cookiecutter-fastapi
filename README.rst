@@ -64,7 +64,7 @@ stack::
 
     docker compose up
 
-tests::
+test::
 
     pytest .
 
@@ -72,23 +72,27 @@ coverage::
 
     coverage run -m pytest && coverage report -m
 
-docs::
+matrix::
+
+    tox run
+
+doc::
 
     make -C docs html
 
-checks::
+check::
 
     pre-commit run
 
-formating::
+format::
 
     black .
 
-linting::
+lint::
 
     ruff .
 
-analysis::
+type::
 
     mypy .
 

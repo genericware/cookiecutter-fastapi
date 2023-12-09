@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import items
-from app.config import APIPrefix, APITags
-from app.db.users import auth_backend, fastapi_users
+from app.config import APIPrefix, APITags, settings
+from app.db.users import auth_backend, fastapi_users, oauth_client
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 
 router = APIRouter(prefix=APIPrefix.v1)
@@ -30,5 +30,12 @@ router.include_router(
     fastapi_users.get_users_router(UserRead, UserUpdate),
     prefix=APIPrefix.users,
     tags=[APITags.users],
+)
+router.include_router(
+    fastapi_users.get_oauth_router(
+        oauth_client, auth_backend, settings.fastapi_secret_key
+    ),
+    prefix=f"{APIPrefix.auth.value}/oauth",
+    tags=[APITags.auth],
 )
 router.include_router(items.router, prefix=APIPrefix.items, tags=[APITags.items])

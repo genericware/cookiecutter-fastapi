@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ItemBase(BaseModel):
@@ -24,14 +24,11 @@ class ItemUpdate(ItemBase):
 
 class ItemInDBBase(ItemBase):
     """Database base model properties."""
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     title: str
     owner_id: UUID
-
-    class Config:
-        from_attributes = True
-
 
 class Item(ItemInDBBase):
     """Database model properties."""

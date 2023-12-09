@@ -10,12 +10,24 @@ from fastapi_users.authentication import (
     JWTStrategy,
 )
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from httpx_oauth.oauth2 import OAuth2
 
 from app import models
 from app.api.deps import get_user_db
 from app.config import settings
+from app.models import User
 
 logger = logging.getLogger(__name__)
+
+# todo: integrate with keycloak
+oauth_client = OAuth2(
+    "CLIENT_ID",
+    "CLIENT_SECRET",
+    "AUTHORIZE_ENDPOINT",
+    "ACCESS_TOKEN_ENDPOINT",
+    refresh_token_endpoint="REFRESH_TOKEN_ENDPOINT",
+    revoke_token_endpoint="REVOKE_TOKEN_ENDPOINT",
+)
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
@@ -34,8 +46,6 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
         :param request:
         :return:
         """
-        # todo: implement
-        ...
         logger.info(f"User {user.id} has registered.")
 
     async def on_after_forgot_password(
@@ -49,8 +59,6 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
         :param request:
         :return:
         """
-        # todo: implement
-        ...
         logger.info(f"User {user.id} has forgot their password. Reset token: {token}")
 
     async def on_after_request_verify(
@@ -64,15 +72,13 @@ class UserManager(UUIDIDMixin, BaseUserManager[models.User, uuid.UUID]):
         :param request:
         :return:
         """
-        # todo: implement
-        ...
         logger.info(
             f"Verification requested for user {user.id}. Verification token: {token}"
         )
 
 
 async def get_user_manager(
-    user_db: SQLAlchemyUserDatabase = Depends(get_user_db),
+    user_db: SQLAlchemyUserDatabase[User, uuid.UUID] = Depends(get_user_db),
 ) -> AsyncIterator[UserManager]:
     """
     Retrieve the user manager.
@@ -86,13 +92,13 @@ async def get_user_manager(
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 
-def get_jwt_strategy() -> JWTStrategy:
+def get_jwt_strategy() -> JWTStrategy[User, uuid.UUID]:
     """
     JSON web token authentication strategy.
 
     :return:
     """
-    return JWTStrategy(secret=settings.secret_key, lifetime_seconds=3600)
+    return JWTStrategy(secret=settings.fastapi_secret_key, lifetime_seconds=3600)
 
 
 auth_backend = AuthenticationBackend(
