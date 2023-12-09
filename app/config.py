@@ -1,6 +1,6 @@
 import secrets
 from enum import Enum
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import AnyHttpUrl, Field, field_validator, ValidationInfo, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
