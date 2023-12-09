@@ -77,8 +77,6 @@ CMD ["uvicorn", "app.main:app"]
 
 FROM base AS production
 
-ENV UVICORN_LOG_LEVEL=warning
-
 COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
 
 WORKDIR /opt/generic-infrastructure
