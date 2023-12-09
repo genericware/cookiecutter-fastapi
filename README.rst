@@ -38,11 +38,15 @@ production::
 
 package::
 
-    todo
+    poetry build
 
-image::
+image (development)::
 
-    docker build . -t cookiecutter-fastapi:0.1.0
+    docker build . --target development --tag cookiecutter-fastapi-development:0.1.0
+
+image (production)::
+
+    docker build . --target production --tag cookiecutter-fastapi-production:0.1.0
 
 =====
  run

@@ -21,7 +21,7 @@ ENV \
     # poetry
     POETRY_VERSION=1.7.1 \
     POETRY_HOME=/opt/poetry \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
+    POETRY_CACHE_DIR=/tmp/poetry_cache \
     POETRY_VIRTUALENVS_OPTIONS_NO_PIP=true \
     POETRY_INSTALLER_MODERN_INSTALLATION=true \
     POETRY_NO_INTERACTION=true \
@@ -45,24 +45,25 @@ ENV \
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends --assume-yes \
+    && apt-get install --no-install-recommends --assume-yes curl\
     && apt-get clean
 
 FROM base AS builder
 
-RUN pip install 'poetry==$POETRY_VERSION'
+RUN curl -sSL https://install.python-poetry.org | python3 -
 
 WORKDIR $PYSETUP_PATH
 
 COPY poetry.lock pyproject.toml ./
 
-#RUN poetry install --without dev && rm -rf $POETRY_CACHE_DIR
 RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --no-root
 
 FROM base AS development
 
-COPY --from=builder-base $POETRY_HOME $POETRY_HOME
-COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
+WORKDIR $PYSETUP_PATH
+
+COPY --from=builder $POETRY_HOME $POETRY_HOME
+COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
 
 RUN poetry install
 
@@ -76,7 +77,7 @@ CMD ["uvicorn", "app.main:app"]
 
 FROM base AS production
 
-COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
+COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
 
 WORKDIR /opt/generic-infrastructure
 
