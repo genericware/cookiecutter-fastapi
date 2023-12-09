@@ -1,0 +1,387 @@
+name: generic-infrastructure
+
+networks:
+  backend:
+
+volumes:
+  redis:
+  grafana:
+  alertmanager:
+  prometheus:
+  loki:
+
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    labels:
+      - 'promtail=true'
+    networks:
+      - backend
+    ports:
+      - '8000:8000'
+    env_file:
+      - .env.development
+    depends_on:
+      # todo: keycloak
+      - postgres
+      # todo: tracing
+#
+#  keycloak:
+#    image: quay.io/keycloak/keycloak:23.0.1
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - backend
+#    environment:
+#      - KEYCLOAK_ADMIN=admin
+#      - KEYCLOAK_ADMIN_PASSWORD=admin  # todo
+
+  postgres:
+    image: postgres:16
+    labels:
+      - 'promtail=true'
+    networks:
+      - backend
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+
+#  postgres-exporter:
+#    image: prometheuscommunity/postgres-exporter:v0.15.0
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    environment:
+#      - DATA_SOURCE_URI=postgres?sslmode=disable
+#      - DATA_SOURCE_USER=postgres
+#      - DATA_SOURCE_PASS=postgres
+#    depends_on:
+#      - postgres
+#
+#  redis:
+#    image: redis:7
+#    restart: always
+#    ports:
+#      - '6379:6379'
+#    command: # todo
+#    volumes:
+#      - redis:/data
+#
+#  minio:
+#    image: minio/minio:latest
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '9000:9000'
+#      - '9001:9001'
+#    environment:
+#      - MINIO_ROOT_USER=admin
+#      - MINIO_ROOT_PASSWORD=testtesttest  # todo
+#      - MINIO_PROMETHEUS_AUTH_TYPE=public
+#      - MINIO_UPDATE=off
+#    volumes:
+#      - ./.data/minio:/data
+#    entrypoint:
+#      - sh
+#      - -euc
+#      - |
+#        mkdir -p /data/loki-data && \
+#        mkdir -p /data/loki-ruler && \
+#        mkdir -p /data/tempo
+#        minio server /data --console-address ':9001'
+#
+#  # todo: events; celery
+#
+#  grafana:
+#    image: grafana/grafana:9.1.6
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3000:3000'
+#    environment:
+#      - GF_SECURITY_ADMIN_PASSWORD=foobar  # todo
+#      - GF_USERS_ALLOW_SIGN_UP=false
+#      - GF_FEATURE_TOGGLES_ENABLE=tempoSearch tempoBackendSearch tempoServiceGraph
+#    volumes:
+#      - ./config/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yml  # todo
+#      - grafana:/var/lib/grafana
+#
+#  alertmanager:
+#    image: prom/alertmanager:v0.23.0
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '9093:9093'
+#    volumes:
+#      - ./config/alertmanager.yaml:/config/alertmanager.yaml  # todo
+#      - alertmanager:/data
+#    command:
+#      - '--config.file=/config/alertmanager.yaml'
+#      - '--log.level=debug'
+#    restart: unless-stopped
+#
+#  prometheus:
+#    image: prom/prometheus:v2.27.0
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '9090:9090'
+#    volumes:
+#      - ./config/prometheus.yaml:/etc/prometheus/prometheus.yaml  # todo
+#      - prometheus:/prometheus
+#    command:
+#      - '--log.level=debug'
+#      - '--config.file=/etc/prometheus/prometheus.yaml'
+#      - '--enable-feature=remote-write-receiver'
+#      - '--enable-feature=exemplar-storage'
+#      - '--query.lookback-delta=30s'
+#
+#  promtail:
+#    image: grafana/promtail:2.9.1
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '9080:9080'
+#    volumes:
+#      - ./config/promtail.yaml:/etc/promtail/promtail.yaml  # todo
+#      - /var/lib/docker/containers:/var/lib/docker/containers
+#      - /var/run/docker.sock:/var/run/docker.sock
+#    command: -config.file=/etc/promtail/promtail.yaml
+#    depends_on:
+#      - loki-gateway
+#
+#  loki-init:
+#    image: &lokiImage grafana/loki:2.9.1
+#    networks:
+#      - backend
+#    user: root
+#    volumes:
+#      - ./.data/loki:/loki
+#    entrypoint:
+#      - 'chown'
+#      - '10001:10001'
+#      - '/loki'
+#
+#  loki-gateway:
+#    image: nginx:1.19
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '8080:80'
+#      - '3100'
+#    volumes:
+#      - ./config/nginx.conf:/etc/nginx/nginx.conf  # todo
+#    depends_on:
+#      - loki-read
+#      - loki-write
+#
+#  loki-frontend:
+#    image: *lokiImage
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3100'
+#    volumes:
+#      - ./config/loki.yaml:/etc/loki/loki.yaml  # todo
+#    command:
+#      - '-config.file=/etc/loki/loki.yaml'
+#      - '-target=query-frontend'
+#      - '-frontend.downstream-url=http://loki-read:3100'
+#    deploy:
+#      mode: replicated
+#      replicas: 2
+#
+#  loki-read:
+#    image: *lokiImage
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3100'
+#      - '7946'
+#    volumes:
+#      - ./config/loki.yaml:/etc/loki/loki.yaml  # todo
+#    command:
+#      - '-config.file=/etc/loki/loki.yaml'
+#      - '-target=read'
+#    deploy:
+#      mode: replicated
+#      replicas: 3
+#
+#  loki-write:
+#    image: *lokiImage
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3100'
+#      - '7946'
+#    volumes:
+#      - ./config/loki.yaml:/etc/loki/loki.yaml  # todo
+#    command:
+#      - '-config.file=/etc/loki/loki.yaml'
+#      - '-target=write'
+#    deploy:
+#      mode: replicated
+#      replicas: 3
+#
+#  tempo-distributor:
+#    image: &tempoImage grafana/tempo:2.2.3
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3200'
+#      - '9411'  # zipkin
+#    volumes:
+#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#    command:
+#      - '-target=distributor'
+#      - '-config.file=/etc/tempo.yaml'
+#    depends_on:
+#      - minio
+#
+#  tempo-ingester-0:
+#    image: *tempoImage
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3200'
+#      - '9411'  # zipkin
+#    volumes:
+#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#    command:
+#      - '-target=ingester'
+#      - '-config.file=/etc/tempo.yaml'
+#    depends_on:
+#      - tempo-distributor
+#
+#  tempo-ingester-1:
+#    image: *tempoImage
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3200'
+#      - '9411'  # zipkin
+#    volumes:
+#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#    command:
+#      - '-target=ingester'
+#      - '-config.file=/etc/tempo.yaml'
+#    depends_on:
+#      - tempo-distributor
+#
+#  tempo-ingester-2:
+#    image: *tempoImage
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3200'
+#      - '9411'  # zipkin
+#    volumes:
+#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#    command:
+#      - '-target=ingester'
+#      - '-config.file=/etc/tempo.yaml'
+#    depends_on:
+#      - tempo-distributor
+#
+#  tempo-query-frontend:
+#    image: *tempoImage
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3200:3200'
+#    volumes:
+#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#    command:
+#      - '-target=query-frontend'
+#      - '-config.file=/etc/tempo.yaml'
+#      - '-log.level=debug'
+#    depends_on:
+#      - minio
+#
+#  tempo-querier:
+#    image: *tempoImage
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3200'
+#    volumes:
+#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#    command:
+#      - '-target=querier'
+#      - '-config.file=/etc/tempo.yaml'
+#      - '-log.level=debug'
+#    depends_on:
+#      - minio
+#      - tempo-query-frontend
+#
+#  tempo-compactor:
+#    image: *tempoImage
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3200'
+#    volumes:
+#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#    command:
+#      - '-target=compactor'
+#      - '-config.file=/etc/tempo.yaml'
+#    depends_on:
+#      - minio
+#
+#  tempo-metrics-generator:
+#    image: *tempoImage
+#    labels:
+#      - 'promtail=true'
+#    networks:
+#      - backend
+#    ports:
+#      - '3200'
+#    volumes:
+#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#    command:
+#      - '-target=metrics-generator'
+#      - '-config.file=/etc/tempo.yaml'
+#    depends_on:
+#      - minio
