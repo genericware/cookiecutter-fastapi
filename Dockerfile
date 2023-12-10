@@ -71,7 +71,7 @@ WORKDIR /opt/generic-infrastructure
 
 COPY ./app/ ./app
 
-EXPOSE 8000
+EXPOSE $UVICORN_PORT
 
 CMD ["uvicorn", "app.main:app"]
 
@@ -83,6 +83,6 @@ WORKDIR /opt/generic-infrastructure
 
 COPY ./app/ ./app
 
-EXPOSE 8000
+EXPOSE $UVICORN_PORT
 
 CMD ["uvicorn", "app.main:app"]

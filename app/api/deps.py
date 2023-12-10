@@ -5,20 +5,9 @@ from fastapi import Depends
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.base_class import Base
-from app.db.session import async_session, engine
+from app.db.session import async_session
 from app.models import User
 from app.models.user import OAuthAccount
-
-
-async def create_db_and_tables() -> None:
-    """
-    Create database and tables.
-
-    :return:
-    """
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

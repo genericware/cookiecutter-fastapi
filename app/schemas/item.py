@@ -24,11 +24,13 @@ class ItemUpdate(ItemBase):
 
 class ItemInDBBase(ItemBase):
     """Database base model properties."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
     title: str
     owner_id: UUID
+
 
 class Item(ItemInDBBase):
     """Database model properties."""
