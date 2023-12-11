@@ -1,7 +1,8 @@
 FROM python:3.11-slim-bookworm AS base
-
 LABEL maintainer="caerulescens <caerulescens.github@proton.me>"
-
+ARG USER=appuser
+ARG USER_GID=10001
+ARG USER_UID=10000
 ENV \
     # os
     TZ=UTC \
@@ -41,48 +42,27 @@ ENV \
     UVICORN_BACKLOG=2048 \
     UVICORN_TIMEOUT_KEEP_ALIVE=5 \
     UVICORN_TIMEOUT_GRACEFUL_SHUTDOWN=30
-
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
-
-RUN apt-get update \
-    && apt-get install --no-install-recommends --assume-yes curl\
-    && apt-get clean
+RUN set -ex \
+    && groupadd --system --gid "${USER_GID}" "${USER}" \
+    && useradd --system --uid "${USER_UID}" --gid "${USER_GID}" --no-create-home "${USER}" \
+    && apt-get update \
+    && apt-get install -y tini \
+    && apt-get purge -y --auto-remove \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
 
 FROM base AS builder
-
-RUN curl -sSL https://install.python-poetry.org | python3 -
-
 WORKDIR $PYSETUP_PATH
-
+RUN pip install poetry=="${POETRY_VERSION}"
 COPY poetry.lock pyproject.toml ./
+RUN --mount=type=cache,target="${POETRY_CACHE_DIR}" poetry install --without dev --no-root
 
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --no-root
-
-FROM base AS development
-
-WORKDIR $PYSETUP_PATH
-
-COPY --from=builder $POETRY_HOME $POETRY_HOME
+FROM base AS runtime
 COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
-
-RUN poetry install
-
 WORKDIR /opt/generic-infrastructure
-
 COPY ./app/ ./app
-
+USER $USERNAME
+ENTRYPOINT ["/sbin/tini", "--", "python -m app.main"]
+CMD [""]
 EXPOSE $UVICORN_PORT
-
-CMD ["uvicorn", "app.main:app"]
-
-FROM base AS production
-
-COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
-
-WORKDIR /opt/generic-infrastructure
-
-COPY ./app/ ./app
-
-EXPOSE $UVICORN_PORT
-
-CMD ["uvicorn", "app.main:app"]

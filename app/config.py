@@ -34,46 +34,67 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=(".env.development", ".env"))
 
-    uvicorn_host: str = Field(...)
-    uvicorn_port: int = Field(...)
-    uvicorn_workers: int = Field(...)
-    uvicorn_log_level: Literal[
-        "critical", "error", "warning", "info", "debug", "trace"
-    ] = Field(...)
-    uvicorn_loop: Literal["none", "auto", "asyncio", "uvloop"] = Field(...)
-    uvicorn_http: Literal["auto", "h11", "httptools"] = Field(...)
-    uvicorn_ws: Literal["auto", "none", "websockets"] = Field(...)
-    uvicorn_interface: Literal["auto", "asgi3", "asgi2", "wsgi"] = Field(...)
-    uvicorn_backlog: int = Field(...)
-    uvicorn_timeout_keep_alive: int = Field(...)
-    uvicorn_timeout_graceful_shutdown: int = Field(...)
-    fastapi_debug: bool = Field(...)
-    fastapi_title: str = Field(...)
-    fastapi_description: str = Field(...)
+    uvicorn_host: str
+    uvicorn_port: int
+    uvicorn_workers: int
+    uvicorn_log_level: Literal["critical", "error", "warning", "info", "debug", "trace"]
+    uvicorn_loop: Literal["none", "auto", "asyncio", "uvloop"]
+    uvicorn_http: Literal["auto", "h11", "httptools"]
+    uvicorn_ws: Literal["auto", "none", "websockets"]
+    uvicorn_interface: Literal["auto", "asgi3", "asgi2", "wsgi"]
+    uvicorn_backlog: int
+    uvicorn_timeout_keep_alive: int
+    uvicorn_timeout_graceful_shutdown: int
+    fastapi_debug: bool
+    fastapi_title: str
+    fastapi_description: str
     fastapi_secret_key: str = Field(default=secrets.token_urlsafe(32))
-    fastapi_access_token_expire_minutes: int = Field(...)
-    cors_allow_origins: list["AnyHttpUrl"] = Field(...)
-    cors_allow_credentials: bool = Field(...)
-    cors_allow_methods: list[str] = Field(...)
-    cors_allow_headers: list[str] = Field(...)
-    cors_expose_headers: list[str] = Field(...)
-    sqlalchemy_echo: bool = Field(...)
-    sqlalchemy_echo_pool: bool = Field(...)
-    sqlalchemy_pool_pre_ping: bool = Field(...)
-    sqlalchemy_pool_size: int = Field(...)
-    sqlalchemy_max_overflow: int = Field(...)
-    sqlalchemy_pool_recycle: int = Field(...)
-    sqlalchemy_pool_timeout: int = Field(...)
-    sqlalchemy_insertmanyvalues_page_size: int = Field(...)
-    sqlalchemy_scheme: str = Field(DatabaseScheme.asyncpg)
-    sqlalchemy_username: str = Field(...)
-    sqlalchemy_password: str = Field(...)
-    sqlalchemy_host: str = Field(...)
-    sqlalchemy_port: int = Field(...)
-    sqlalchemy_path: str = Field(...)
+    fastapi_access_token_expire_minutes: int
+    oauth_name: str
+    oauth_client_id: str
+    oauth_client_secret: str
+    oauth_authorize_endpoint: str
+    oauth_access_token_endpoint: str
+    oauth_refresh_token_endpoint: str | None
+    oauth_revoke_token_endpoint: str | None
+    cors_allow_origins: list["AnyHttpUrl"]
+    cors_allow_credentials: bool
+    cors_allow_methods: list[str]
+    cors_allow_headers: list[str]
+    cors_expose_headers: list[str]
+    sqlalchemy_echo: bool
+    sqlalchemy_echo_pool: bool
+    sqlalchemy_pool_pre_ping: bool
+    sqlalchemy_pool_size: int
+    sqlalchemy_max_overflow: int
+    sqlalchemy_pool_recycle: int
+    sqlalchemy_pool_timeout: int
+    sqlalchemy_insertmanyvalues_page_size: int
+    sqlalchemy_scheme: str
+    sqlalchemy_username: str
+    sqlalchemy_password: str
+    sqlalchemy_host: str
+    sqlalchemy_port: int
+    sqlalchemy_path: str
     sqlalchemy_dsn: PostgresDsn | str | None = Field(None)
-    loguru_format: str = Field(...)
-    loguru_level: str = Field(...)
+    loguru_format: str
+    loguru_level: str
+    prometheus_instrumentator_should_group_status_codes: bool
+    prometheus_instrumentator_should_ignore_untemplated: bool
+    prometheus_instrumentator_should_respect_env_var: bool
+    prometheus_instrumentator_should_instrument_requests_in_progress: bool
+    prometheus_instrumentator_excluded_handlers: list[str]
+    prometheus_instrumentator_env_var_name: str
+    prometheus_instrumentator_enable: bool
+    prometheus_instrumentator_inprogress_name: str
+    prometheus_instrumentator_inprogress_labels: bool
+    prometheus_instrumentator_include_in_schema: bool
+    prometheus_instrumentator_should_gzip: bool
+    # otel_service_name: str
+    # otel_traces_exporter: str
+    # otel_metrics_exporters: str
+    otel_instrumentation_http_capture_headers_server_request: str
+    otel_instrumentation_http_capture_headers_server_response: str
 
     @field_validator("sqlalchemy_dsn", mode="before")
     @classmethod

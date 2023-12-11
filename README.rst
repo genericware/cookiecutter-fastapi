@@ -40,13 +40,9 @@ package::
 
     poetry build
 
-image (development)::
+image::
 
-    docker build . -t app-development:0.1.0 --target development
-
-image (production)::
-
-    docker build . -t app-production:0.1.0 --target production
+    docker build . -t cookiecutter-fastapi-development:0.1.0
 
 =====
  run
@@ -58,7 +54,7 @@ app::
 
 container::
 
-    docker run --init app-development:0.1.0
+    docker run app-development:0.1.0 --target runtime
 
 stack::
 

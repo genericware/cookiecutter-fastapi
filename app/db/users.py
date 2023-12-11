@@ -19,14 +19,14 @@ from app.models import User
 
 logger = logging.getLogger(__name__)
 
-# todo: integrate with keycloak
 oauth_client = OAuth2(
-    "CLIENT_ID",
-    "CLIENT_SECRET",
-    "AUTHORIZE_ENDPOINT",
-    "ACCESS_TOKEN_ENDPOINT",
-    refresh_token_endpoint="REFRESH_TOKEN_ENDPOINT",
-    revoke_token_endpoint="REVOKE_TOKEN_ENDPOINT",
+    name=settings.oauth_name,
+    client_id=settings.oauth_client_id,
+    client_secret=settings.oauth_client_secret,
+    authorize_endpoint=settings.oauth_authorize_endpoint,
+    access_token_endpoint=settings.oauth_access_token_endpoint,
+    refresh_token_endpoint=settings.oauth_refresh_token_endpoint,
+    revoke_token_endpoint=settings.oauth_revoke_token_endpoint,
 )
 
 

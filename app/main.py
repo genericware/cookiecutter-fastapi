@@ -1,4 +1,5 @@
 import sys
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,10 +19,7 @@ app = FastAPI(
     version=__version__,
 )
 
-# logging
-logger.add(sys.stderr, format=settings.loguru_format, level=settings.loguru_level)
-
-# cors middleware
+# cors
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_allow_origins,
@@ -31,16 +29,33 @@ app.add_middleware(
     expose_headers=settings.cors_expose_headers,
 )
 
-# metrics middleware
-Instrumentator().instrument(app).expose(app)
+# prometheus
+Instrumentator(
+    should_group_status_codes=settings.prometheus_instrumentator_should_group_status_codes,
+    should_ignore_untemplated=settings.prometheus_instrumentator_should_ignore_untemplated,
+    should_respect_env_var=settings.prometheus_instrumentator_should_respect_env_var,
+    should_instrument_requests_inprogress=settings.prometheus_instrumentator_should_instrument_requests_in_progress,
+    excluded_handlers=settings.prometheus_instrumentator_excluded_handlers,
+    env_var_name=settings.prometheus_instrumentator_env_var_name,
+    inprogress_name=settings.prometheus_instrumentator_inprogress_name,
+    inprogress_labels=settings.prometheus_instrumentator_inprogress_labels,
+).instrument(app).expose(
+    app,
+    include_in_schema=settings.prometheus_instrumentator_include_in_schema,
+    should_gzip=settings.prometheus_instrumentator_should_gzip,
+)
 
-# tracing middleware
+# opentelemetry
 FastAPIInstrumentor.instrument_app(app)
 
-# app routes
+# routers
 app.include_router(api_v1.router)
 
 if __name__ == "__main__":
+    # loguru
+    logger.add(sys.stderr, format=settings.loguru_format, level=settings.loguru_level)
+
+    # uvicorn
     uvicorn.run(
         app=app,
         host=settings.uvicorn_host,

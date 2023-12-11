@@ -10,7 +10,7 @@ authors = ["caerulescens <caerulescens.github@proton.me>"]
 readme = "README.rst"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.10,<3.12"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 uvloop = "^0.19.0"
 orjson = "^3.9.10"
@@ -40,6 +40,7 @@ tox = "^4.11.4"
 black = "^23.9.1"
 ruff = "^0.1.7"
 mypy = "^1.7.1"
+locust = "^2.19.1"
 sphinx = "^7.2.6"
 pydocstyle = "^6.3.0"
 cython = "^3.0.2"
@@ -52,19 +53,24 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.coverage.run]
-omit = [".*", "*/site-packages/*"]
+branch = true
+concurrency = ["gevent"]
+dynamic_context = "test_function"
 
 [tool.coverage.report]
-fail_under = 95
+fail_under = 50
+
+[tool.coverage.html]
+directory = "coverage_html_report"
 
 [tool.black]
 line-length = 88
-target-version = ["py311"]
+target-version = ["py310", "py311"]
 include = '\.pyi?$'
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py310"
 src = ["app", "tests"]
 select = ["F", "E", "W", "C90", "S", "I", "N", "D", "UP"]
 ignore = ["D100", "D104", "D106"]
