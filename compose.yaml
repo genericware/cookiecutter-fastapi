@@ -10,44 +10,42 @@ volumes:
   prometheus:
   loki:
 
+x-common: &common
+  networks:
+    - backend
+  labels:
+    - 'promtail=true'
+
 services:
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
-      target: development
-    labels:
-      - 'promtail=true'
-    networks:
-      - backend
+      target: runtime
+    <<: *common
     ports:
       - '8000:8000'
     env_file:
       - .env.development
     depends_on:
-      # todo: keycloak
+      - keycloak
       - postgres
-      # todo: tracing
-#
-#  keycloak:
-#    image: quay.io/keycloak/keycloak:23.0.1
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
-#    ports:
-#      - backend
-#    environment:
-#      - KEYCLOAK_ADMIN=admin
-#      - KEYCLOAK_ADMIN_PASSWORD=admin  # todo
+      - redis
+      - tempo-distributor
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.1
+    <<: *common
+    ports:
+      - '8080:8080'
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
 
   postgres:
     image: postgres:16
-    labels:
-      - 'promtail=true'
-    networks:
-      - backend
+    <<: *common
     ports:
       - '5432:5432'
     environment:
@@ -55,125 +53,247 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=postgres
 
-#  postgres-exporter:
-#    image: prometheuscommunity/postgres-exporter:v0.15.0
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
-#    environment:
-#      - DATA_SOURCE_URI=postgres?sslmode=disable
-#      - DATA_SOURCE_USER=postgres
-#      - DATA_SOURCE_PASS=postgres
-#    depends_on:
-#      - postgres
-#
-#  redis:
-#    image: redis:7
-#    restart: always
-#    ports:
-#      - '6379:6379'
-#    command: # todo
-#    volumes:
-#      - redis:/data
-#
-#  minio:
-#    image: minio/minio:latest
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
-#    ports:
-#      - '9000:9000'
-#      - '9001:9001'
-#    environment:
-#      - MINIO_ROOT_USER=admin
-#      - MINIO_ROOT_PASSWORD=testtesttest  # todo
-#      - MINIO_PROMETHEUS_AUTH_TYPE=public
-#      - MINIO_UPDATE=off
-#    volumes:
-#      - ./.data/minio:/data
-#    entrypoint:
-#      - sh
-#      - -euc
-#      - |
-#        mkdir -p /data/loki-data && \
-#        mkdir -p /data/loki-ruler && \
-#        mkdir -p /data/tempo
-#        minio server /data --console-address ':9001'
-#
-#  # todo: events; celery
-#
-#  grafana:
-#    image: grafana/grafana:9.1.6
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
-#    ports:
-#      - '3000:3000'
-#    environment:
-#      - GF_SECURITY_ADMIN_PASSWORD=foobar  # todo
-#      - GF_USERS_ALLOW_SIGN_UP=false
-#      - GF_FEATURE_TOGGLES_ENABLE=tempoSearch tempoBackendSearch tempoServiceGraph
-#    volumes:
-#      - ./config/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yml  # todo
-#      - grafana:/var/lib/grafana
-#
-#  alertmanager:
-#    image: prom/alertmanager:v0.23.0
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
-#    ports:
-#      - '9093:9093'
-#    volumes:
-#      - ./config/alertmanager.yaml:/config/alertmanager.yaml  # todo
-#      - alertmanager:/data
-#    command:
-#      - '--config.file=/config/alertmanager.yaml'
-#      - '--log.level=debug'
-#    restart: unless-stopped
-#
-#  prometheus:
-#    image: prom/prometheus:v2.27.0
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
-#    ports:
-#      - '9090:9090'
-#    volumes:
-#      - ./config/prometheus.yaml:/etc/prometheus/prometheus.yaml  # todo
-#      - prometheus:/prometheus
-#    command:
-#      - '--log.level=debug'
-#      - '--config.file=/etc/prometheus/prometheus.yaml'
-#      - '--enable-feature=remote-write-receiver'
-#      - '--enable-feature=exemplar-storage'
-#      - '--query.lookback-delta=30s'
-#
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    <<: *common
+    environment:
+      - DATA_SOURCE_URI=postgres?sslmode=disable
+      - DATA_SOURCE_USER=postgres
+      - DATA_SOURCE_PASS=postgres
+
+  redis:
+    image: redis:7
+    <<: *common
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis:/data
+
+  minio:
+    image: minio/minio:RELEASE.2023-12-09T18-17-51Z
+    <<: *common
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=testtesttest
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+      - MINIO_UPDATE=off
+    volumes:
+      - ./.data/minio:/data
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /data/loki-data && \
+        mkdir -p /data/loki-ruler && \
+        mkdir -p /data/tempo
+        minio server /data --console-address ':9001'
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 15s
+      timeout: 20s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:9.1.6
+    <<: *common
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_FEATURE_TOGGLES_ENABLE=tempoSearch tempoBackendSearch tempoServiceGraph
+    volumes:
+      - grafana:/var/lib/grafana
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/grafana/provisioning/datasources
+        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+        apiVersion: 1
+        datasources:
+          - access: proxy
+            basicAuth: false
+            jsonData:
+              httpHeaderName1: "X-Scope-OrgID"
+            secureJsonData:
+              httpHeaderValue1: "docker"
+            editable: true
+            isDefault: true
+            name: loki
+            type: loki
+            uid: loki
+            url: http://loki-gateway:80
+            version: 1
+          - access: proxy
+            basicAuth: false
+            editable: true
+            isDefault: false
+            name: prometheus
+            type: prometheus
+            uid: prometheus
+            url: http://prometheus:9090
+            version: 1
+          - access: proxy
+            url: http://tempo-query-frontend:3200
+            basicAuth: false
+            jsonData:
+              httpMethod: GET
+              serviceMap:
+                datasourceUid: prometheus
+            editable: true
+            isDefault: false
+            name: tempo
+            type: tempo
+            uid: tempo
+            version: 1
+        EOF
+        /run.sh
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  alertmanager:
+    image: prom/alertmanager:v0.23.0
+    <<: *common
+    ports:
+      - '9093:9093'
+    volumes:
+      - alertmanager:/data
+    command:
+      - '--config.file=/config/alertmanager.yaml'
+      - '--log.level=debug'
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /config/
+        cat <<EOF > /config/alertmanager.yaml
+        route:
+        receiver: 'default-receiver'
+        group_wait: 30s
+        group_interval: 30m
+        group_by: [ alertname ]
+        receivers:
+          - name: 'default-receiver'
+        EOF
+        /run.sh
+
+  prometheus:
+    image: prom/prometheus:v2.27.0
+    <<: *common
+    ports:
+      - '9090:9090'
+    volumes:
+      - prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yaml'
+      - '--enable-feature=remote-write-receiver'
+      - '--enable-feature=exemplar-storage'
+      - '--query.lookback-delta=30s'
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/prometheus
+        cat <<EOF > /etc/prometheus/prometheus.yaml
+        global:
+          scrape_interval:     5s
+        scrape_configs:
+          - job_name: "prometheus"
+            static_configs:
+              - targets:
+                  - "prometheus:9090"
+          - job_name: "postgres-exporter"
+            static_configs:
+              - targets:
+                  - "postgres-exporter:9187"
+          - job_name: 'loki'
+            dns_sd_configs:
+              - names:
+                  - loki-read
+                  - loki-write
+                  - loki-frontend
+                type: A
+                port: 3100
+          - job_name: 'promtail'
+            dns_sd_configs:
+              - names:
+                  - promtail
+                type: A
+                port: 9080
+          - job_name: 'tempo'
+            static_configs:
+              - targets:
+                  - 'tempo-distributor:3200'
+                  - 'tempo-ingester-0:3200'
+                  - 'tempo-ingester-1:3200'
+                  - 'tempo-ingester-2:3200'
+                  - 'tempo-query-frontend:3200'
+                  - 'tempo-querier:3200'
+                  - 'tempo-compactor:3200'
+                  - 'tempo-metrics-generator:3200'
+        EOF
+        /run.sh
+
 #  promtail:
 #    image: grafana/promtail:2.9.1
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    <<: *common
 #    ports:
 #      - '9080:9080'
 #    volumes:
-#      - ./config/promtail.yaml:/etc/promtail/promtail.yaml  # todo
 #      - /var/lib/docker/containers:/var/lib/docker/containers
 #      - /var/run/docker.sock:/var/run/docker.sock
 #    command: -config.file=/etc/promtail/promtail.yaml
 #    depends_on:
 #      - loki-gateway
+#    entrypoint:
+#      - sh
+#      - -euc
+#      - |
+#        mkdir -p /etc/promtail
+#        cat <<EOF > /etc/promtail/promtail.yaml
+#        server:
+#          http_listen_address: 0.0.0.0
+#          http_listen_port: 9080
+#          grpc_listen_port: 0
+#          log_level: "info"
+#
+#        positions:
+#            filename: /tmp/positions.yaml
+#
+#        clients:
+#            - url: http://loki-gateway:80/loki/api/v1/push
+#              tenant_id: docker
+#
+#        scrape_configs:
+#
+#          - job_name: containers
+#            docker_sd_configs:
+#              - host: unix:///var/run/docker.sock
+#                refresh_interval: 15s
+#                filters:
+#                  - name: label
+#                    values: ["promtail=true"]
+#            pipeline_stages:
+#              - docker: {}
+#            relabel_configs:
+#              - source_labels: ['__meta_docker_container_name']
+#                regex: '/(.*)'
+#                target_label: 'container'
+#        EOF
+#        /run.sh
 #
 #  loki-init:
-#    image: &lokiImage grafana/loki:2.9.1
-#    networks:
-#      - backend
+#    image: &loki-image grafana/loki:2.9.1
+#    <<: *common
 #    user: root
 #    volumes:
 #      - ./.data/loki:/loki
@@ -184,204 +304,244 @@ services:
 #
 #  loki-gateway:
 #    image: nginx:1.19
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    <<: *common
 #    ports:
 #      - '8080:80'
-#      - '3100'
-#    volumes:
-#      - ./config/nginx.conf:/etc/nginx/nginx.conf  # todo
+#      - &loki-port '3100:3100'
 #    depends_on:
 #      - loki-read
 #      - loki-write
+#    entrypoint:
+#      - sh
+#      - -euc
+#      - |
+#        cat <<EOF > /etc/nginx/nginx.conf
+#        error_log  /dev/stderr;
+#        pid        /tmp/nginx.pid;
+#        worker_rlimit_nofile 8192;
+#
+#        events {
+#            worker_connections  4096;  ## Default: 1024
+#        }
+#
+#        http {
+#          default_type application/octet-stream;
+#          log_format   main '$remote_addr - $remote_user [$time_local]  $status '
+#            '"$request" $body_bytes_sent "$http_referer" '
+#            '"$http_user_agent" "$http_x_forwarded_for"';
+#          access_log   /dev/stderr  main;
+#          sendfile     on;
+#          tcp_nopush   on;
+#
+#          upstream read {
+#            server loki-read:3100;
+#          }
+#
+#          upstream write {
+#            server loki-write:3100;
+#          }
+#
+#          upstream cluster {
+#            server loki-read:3100;
+#            server loki-write:3100;
+#          }
+#
+#          upstream query-frontend {
+#            server loki-frontend:3100;
+#          }
+#
+#          server {
+#            listen 80;
+#            listen 3100;
+#
+#            location = /ring {
+#                proxy_pass       http://cluster$request_uri;
+#            }
+#
+#            location = /memberlist {
+#                proxy_pass       http://cluster$request_uri;
+#            }
+#
+#            location = /config {
+#                proxy_pass       http://cluster$request_uri;
+#            }
+#
+#            location = /metrics {
+#                proxy_pass       http://cluster$request_uri;
+#            }
+#
+#            location = /ready {
+#                proxy_pass       http://cluster$request_uri;
+#            }
+#
+#            location = /loki/api/v1/push {
+#                proxy_pass       http://write$request_uri;
+#            }
+#
+#            location = /loki/api/v1/tail {
+#                proxy_pass       http://read$request_uri;
+#                proxy_set_header Upgrade $http_upgrade;
+#                proxy_set_header Connection "upgrade";
+#            }
+#
+#            location ~ /loki/api/.* {
+#                proxy_pass       http://query-frontend$request_uri;
+#            }
+#          }
+#        }
+#        EOF
+#        /docker-entrypoint.sh nginx -g "daemon off;"
+#    healthcheck:
+#      test: [ "CMD", "service", "nginx", "status" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
 #
 #  loki-frontend:
-#    image: *lokiImage
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    image: *loki-image
+#    <<: *common
 #    ports:
-#      - '3100'
-#    volumes:
-#      - ./config/loki.yaml:/etc/loki/loki.yaml  # todo
+#      - *loki-port
 #    command:
-#      - '-config.file=/etc/loki/loki.yaml'
 #      - '-target=query-frontend'
+#      - &loki-config '-config.file=/etc/loki/loki.yaml'
 #      - '-frontend.downstream-url=http://loki-read:3100'
 #    deploy:
 #      mode: replicated
 #      replicas: 2
+#    # todo: cat + eof
 #
 #  loki-read:
-#    image: *lokiImage
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    image: *loki-image
+#    <<: *common
 #    ports:
-#      - '3100'
-#      - '7946'
-#    volumes:
-#      - ./config/loki.yaml:/etc/loki/loki.yaml  # todo
+#      - *loki-port
+#      - &loki-ml-port '7946:7946'
 #    command:
-#      - '-config.file=/etc/loki/loki.yaml'
 #      - '-target=read'
+#      - *loki-config
 #    deploy:
 #      mode: replicated
 #      replicas: 3
+#    # todo: cat + eof
+#    healthcheck:
+#      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
 #
 #  loki-write:
-#    image: *lokiImage
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    image: *loki-image
+#    <<: *common
 #    ports:
-#      - '3100'
-#      - '7946'
-#    volumes:
-#      - ./config/loki.yaml:/etc/loki/loki.yaml  # todo
+#      - *loki-port
+#      - *loki-ml-port
 #    command:
-#      - '-config.file=/etc/loki/loki.yaml'
 #      - '-target=write'
+#      - *loki-config
 #    deploy:
 #      mode: replicated
 #      replicas: 3
+#    # todo: cat + eof
+#    healthcheck:
+#      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
 #
 #  tempo-distributor:
-#    image: &tempoImage grafana/tempo:2.2.3
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    image: &tempo-image grafana/tempo:2.2.3
+#    <<: *common
 #    ports:
-#      - '3200'
-#      - '9411'  # zipkin
-#    volumes:
-#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#      - &tempo-port '3200:3200'
 #    command:
 #      - '-target=distributor'
-#      - '-config.file=/etc/tempo.yaml'
+#      - &tempo-config '-config.file=/etc/tempo.yaml'
 #    depends_on:
 #      - minio
+#    # todo: cat + eof
 #
 #  tempo-ingester-0:
-#    image: *tempoImage
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    image: *tempo-image
+#    <<: *common
 #    ports:
-#      - '3200'
-#      - '9411'  # zipkin
-#    volumes:
-#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#      - *tempo-port
 #    command:
 #      - '-target=ingester'
-#      - '-config.file=/etc/tempo.yaml'
+#      - *tempo-config
 #    depends_on:
 #      - tempo-distributor
+#    # todo: cat + eof
 #
 #  tempo-ingester-1:
-#    image: *tempoImage
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    image: *tempo-image
+#    <<: *common
 #    ports:
-#      - '3200'
-#      - '9411'  # zipkin
-#    volumes:
-#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#      - *tempo-port
 #    command:
 #      - '-target=ingester'
-#      - '-config.file=/etc/tempo.yaml'
+#      - *tempo-config
 #    depends_on:
 #      - tempo-distributor
+#    # todo: cat + eof
 #
 #  tempo-ingester-2:
-#    image: *tempoImage
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    image: *tempo-image
+#    <<: *common
 #    ports:
-#      - '3200'
-#      - '9411'  # zipkin
-#    volumes:
-#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#      - *tempo-port
 #    command:
 #      - '-target=ingester'
-#      - '-config.file=/etc/tempo.yaml'
+#      - *tempo-config
 #    depends_on:
 #      - tempo-distributor
+#    # todo: cat + eof
 #
 #  tempo-query-frontend:
-#    image: *tempoImage
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    image: *tempo-image
+#    <<: *common
 #    ports:
-#      - '3200:3200'
-#    volumes:
-#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#      - *tempo-port
 #    command:
 #      - '-target=query-frontend'
-#      - '-config.file=/etc/tempo.yaml'
-#      - '-log.level=debug'
+#      - *tempo-config
 #    depends_on:
 #      - minio
+#    # todo: cat + eof
 #
 #  tempo-querier:
-#    image: *tempoImage
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    image: *tempo-image
+#    <<: *common
 #    ports:
-#      - '3200'
-#    volumes:
-#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#      - *tempo-port
 #    command:
 #      - '-target=querier'
-#      - '-config.file=/etc/tempo.yaml'
-#      - '-log.level=debug'
+#      - *tempo-config
 #    depends_on:
 #      - minio
 #      - tempo-query-frontend
+#    # todo: cat + eof
 #
 #  tempo-compactor:
-#    image: *tempoImage
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    image: *tempo-image
+#    <<: *common
 #    ports:
-#      - '3200'
-#    volumes:
-#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#      - *tempo-port
 #    command:
 #      - '-target=compactor'
-#      - '-config.file=/etc/tempo.yaml'
+#      - *tempo-config
 #    depends_on:
 #      - minio
+#    # todo: cat + eof
 #
 #  tempo-metrics-generator:
-#    image: *tempoImage
-#    labels:
-#      - 'promtail=true'
-#    networks:
-#      - backend
+#    image: *tempo-image
+#    <<: *common
 #    ports:
-#      - '3200'
-#    volumes:
-#      - ./config/tempo.yaml:/etc/tempo.yaml  # todo
+#      - *tempo-port
 #    command:
 #      - '-target=metrics-generator'
-#      - '-config.file=/etc/tempo.yaml'
+#      - *tempo-config
 #    depends_on:
 #      - minio
+#    # todo: cat + eof
