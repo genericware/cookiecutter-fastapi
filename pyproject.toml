@@ -6,8 +6,13 @@ build-backend = "poetry.core.masonry.api"
 name = "app"
 version = "0.1.0"
 description = "cookiecutter template for fastapi"
+license = "MIT"
 authors = ["caerulescens <caerulescens.github@proton.me>"]
+maintainers = ["caerulescens <caerulescens.github@proton.me>"]
 readme = "README.rst"
+repository = "https://github.com/generic-infrastructure/cookiecutter-fastapi"
+keywords = ["cookiecutter", "fastapi", "sqlalchemy"]
+classifiers = ["Development Status :: 2 - Pre-Alpha"]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
@@ -15,7 +20,7 @@ uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 uvloop = "^0.19.0"
 orjson = "^3.9.10"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
-fastapi = "^0.104.1"
+fastapi = "^0.105.0"
 fastapi-users = {extras = ["oauth", "sqlalchemy"], version = "^12.1.2"}
 pydantic = "^2.5.2"
 pydantic-settings = "^2.1.0"
