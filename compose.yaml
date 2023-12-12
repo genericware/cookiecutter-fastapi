@@ -29,19 +29,19 @@ services:
     env_file:
       - .env.development
     depends_on:
-      - keycloak
+#      - keycloak
       - postgres
       - redis
       - tempo-distributor
 
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0.1
-    <<: *common
-    ports:
-      - '8080:8080'
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+#  keycloak:
+#    image: quay.io/keycloak/keycloak:23.0.1
+#    <<: *common
+#    ports:
+#      - '8080:8080'
+#    environment:
+#      - KEYCLOAK_ADMIN=admin
+#      - KEYCLOAK_ADMIN_PASSWORD=admin
 
   postgres:
     image: postgres:16
@@ -90,11 +90,6 @@ services:
         mkdir -p /data/loki-ruler && \
         mkdir -p /data/tempo
         minio server /data --console-address ':9001'
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
-      interval: 15s
-      timeout: 20s
-      retries: 5
 
   grafana:
     image: grafana/grafana:9.1.6
@@ -154,11 +149,6 @@ services:
             version: 1
         EOF
         /run.sh
-    healthcheck:
-      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   alertmanager:
     image: prom/alertmanager:v0.23.0
@@ -167,24 +157,20 @@ services:
       - '9093:9093'
     volumes:
       - alertmanager:/data
-    command:
-      - '--config.file=/config/alertmanager.yaml'
-      - '--log.level=debug'
     entrypoint:
       - sh
       - -euc
       - |
-        mkdir -p /config/
-        cat <<EOF > /config/alertmanager.yaml
+        cat <<EOF > /etc/alertmanager/alertmanager.yml
         route:
-        receiver: 'default-receiver'
-        group_wait: 30s
-        group_interval: 30m
-        group_by: [ alertname ]
+          receiver: 'default-receiver'
+          group_wait: 30s
+          group_interval: 30m
+          group_by: [ alertname ]
         receivers:
           - name: 'default-receiver'
         EOF
-        /run.sh
+        /bin/alertmanager --config.file=/etc/alertmanager/alertmanager.yml
 
   prometheus:
     image: prom/prometheus:v2.27.0
@@ -193,11 +179,6 @@ services:
       - '9090:9090'
     volumes:
       - prometheus:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yaml'
-      - '--enable-feature=remote-write-receiver'
-      - '--enable-feature=exemplar-storage'
-      - '--query.lookback-delta=30s'
     entrypoint:
       - sh
       - -euc
@@ -241,307 +222,278 @@ services:
                   - 'tempo-compactor:3200'
                   - 'tempo-metrics-generator:3200'
         EOF
-        /run.sh
+        /bin/prometheus --config.file=/etc/prometheus/prometheus.yaml \
+                        --enable-feature=remote-write-receiver \
+                        --enable-feature=exemplar-storage \
+                        --query.lookback-delta=30s
 
-#  promtail:
-#    image: grafana/promtail:2.9.1
-#    <<: *common
-#    ports:
-#      - '9080:9080'
-#    volumes:
-#      - /var/lib/docker/containers:/var/lib/docker/containers
-#      - /var/run/docker.sock:/var/run/docker.sock
-#    command: -config.file=/etc/promtail/promtail.yaml
-#    depends_on:
-#      - loki-gateway
-#    entrypoint:
-#      - sh
-#      - -euc
-#      - |
-#        mkdir -p /etc/promtail
-#        cat <<EOF > /etc/promtail/promtail.yaml
-#        server:
-#          http_listen_address: 0.0.0.0
-#          http_listen_port: 9080
-#          grpc_listen_port: 0
-#          log_level: "info"
-#
-#        positions:
-#            filename: /tmp/positions.yaml
-#
-#        clients:
-#            - url: http://loki-gateway:80/loki/api/v1/push
-#              tenant_id: docker
-#
-#        scrape_configs:
-#
-#          - job_name: containers
-#            docker_sd_configs:
-#              - host: unix:///var/run/docker.sock
-#                refresh_interval: 15s
-#                filters:
-#                  - name: label
-#                    values: ["promtail=true"]
-#            pipeline_stages:
-#              - docker: {}
-#            relabel_configs:
-#              - source_labels: ['__meta_docker_container_name']
-#                regex: '/(.*)'
-#                target_label: 'container'
-#        EOF
-#        /run.sh
-#
-#  loki-init:
-#    image: &loki-image grafana/loki:2.9.1
-#    <<: *common
-#    user: root
-#    volumes:
-#      - ./.data/loki:/loki
-#    entrypoint:
-#      - 'chown'
-#      - '10001:10001'
-#      - '/loki'
-#
-#  loki-gateway:
-#    image: nginx:1.19
-#    <<: *common
-#    ports:
-#      - '8080:80'
-#      - &loki-port '3100:3100'
-#    depends_on:
-#      - loki-read
-#      - loki-write
-#    entrypoint:
-#      - sh
-#      - -euc
-#      - |
-#        cat <<EOF > /etc/nginx/nginx.conf
-#        error_log  /dev/stderr;
-#        pid        /tmp/nginx.pid;
-#        worker_rlimit_nofile 8192;
-#
-#        events {
-#            worker_connections  4096;  ## Default: 1024
-#        }
-#
-#        http {
-#          default_type application/octet-stream;
-#          log_format   main '$remote_addr - $remote_user [$time_local]  $status '
-#            '"$request" $body_bytes_sent "$http_referer" '
-#            '"$http_user_agent" "$http_x_forwarded_for"';
-#          access_log   /dev/stderr  main;
-#          sendfile     on;
-#          tcp_nopush   on;
-#
-#          upstream read {
-#            server loki-read:3100;
-#          }
-#
-#          upstream write {
-#            server loki-write:3100;
-#          }
-#
-#          upstream cluster {
-#            server loki-read:3100;
-#            server loki-write:3100;
-#          }
-#
-#          upstream query-frontend {
-#            server loki-frontend:3100;
-#          }
-#
-#          server {
-#            listen 80;
-#            listen 3100;
-#
-#            location = /ring {
-#                proxy_pass       http://cluster$request_uri;
-#            }
-#
-#            location = /memberlist {
-#                proxy_pass       http://cluster$request_uri;
-#            }
-#
-#            location = /config {
-#                proxy_pass       http://cluster$request_uri;
-#            }
-#
-#            location = /metrics {
-#                proxy_pass       http://cluster$request_uri;
-#            }
-#
-#            location = /ready {
-#                proxy_pass       http://cluster$request_uri;
-#            }
-#
-#            location = /loki/api/v1/push {
-#                proxy_pass       http://write$request_uri;
-#            }
-#
-#            location = /loki/api/v1/tail {
-#                proxy_pass       http://read$request_uri;
-#                proxy_set_header Upgrade $http_upgrade;
-#                proxy_set_header Connection "upgrade";
-#            }
-#
-#            location ~ /loki/api/.* {
-#                proxy_pass       http://query-frontend$request_uri;
-#            }
-#          }
-#        }
-#        EOF
-#        /docker-entrypoint.sh nginx -g "daemon off;"
-#    healthcheck:
-#      test: [ "CMD", "service", "nginx", "status" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#
-#  loki-frontend:
-#    image: *loki-image
-#    <<: *common
-#    ports:
-#      - *loki-port
-#    command:
-#      - '-target=query-frontend'
-#      - &loki-config '-config.file=/etc/loki/loki.yaml'
-#      - '-frontend.downstream-url=http://loki-read:3100'
-#    deploy:
-#      mode: replicated
-#      replicas: 2
-#    # todo: cat + eof
-#
-#  loki-read:
-#    image: *loki-image
-#    <<: *common
-#    ports:
-#      - *loki-port
-#      - &loki-ml-port '7946:7946'
-#    command:
-#      - '-target=read'
-#      - *loki-config
-#    deploy:
-#      mode: replicated
-#      replicas: 3
-#    # todo: cat + eof
-#    healthcheck:
-#      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#
-#  loki-write:
-#    image: *loki-image
-#    <<: *common
-#    ports:
-#      - *loki-port
-#      - *loki-ml-port
-#    command:
-#      - '-target=write'
-#      - *loki-config
-#    deploy:
-#      mode: replicated
-#      replicas: 3
-#    # todo: cat + eof
-#    healthcheck:
-#      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#
-#  tempo-distributor:
-#    image: &tempo-image grafana/tempo:2.2.3
-#    <<: *common
-#    ports:
-#      - &tempo-port '3200:3200'
-#    command:
-#      - '-target=distributor'
-#      - &tempo-config '-config.file=/etc/tempo.yaml'
-#    depends_on:
-#      - minio
-#    # todo: cat + eof
-#
-#  tempo-ingester-0:
-#    image: *tempo-image
-#    <<: *common
-#    ports:
-#      - *tempo-port
-#    command:
-#      - '-target=ingester'
-#      - *tempo-config
-#    depends_on:
-#      - tempo-distributor
-#    # todo: cat + eof
-#
-#  tempo-ingester-1:
-#    image: *tempo-image
-#    <<: *common
-#    ports:
-#      - *tempo-port
-#    command:
-#      - '-target=ingester'
-#      - *tempo-config
-#    depends_on:
-#      - tempo-distributor
-#    # todo: cat + eof
-#
-#  tempo-ingester-2:
-#    image: *tempo-image
-#    <<: *common
-#    ports:
-#      - *tempo-port
-#    command:
-#      - '-target=ingester'
-#      - *tempo-config
-#    depends_on:
-#      - tempo-distributor
-#    # todo: cat + eof
-#
-#  tempo-query-frontend:
-#    image: *tempo-image
-#    <<: *common
-#    ports:
-#      - *tempo-port
-#    command:
-#      - '-target=query-frontend'
-#      - *tempo-config
-#    depends_on:
-#      - minio
-#    # todo: cat + eof
-#
-#  tempo-querier:
-#    image: *tempo-image
-#    <<: *common
-#    ports:
-#      - *tempo-port
-#    command:
-#      - '-target=querier'
-#      - *tempo-config
-#    depends_on:
-#      - minio
-#      - tempo-query-frontend
-#    # todo: cat + eof
-#
-#  tempo-compactor:
-#    image: *tempo-image
-#    <<: *common
-#    ports:
-#      - *tempo-port
-#    command:
-#      - '-target=compactor'
-#      - *tempo-config
-#    depends_on:
-#      - minio
-#    # todo: cat + eof
-#
-#  tempo-metrics-generator:
-#    image: *tempo-image
-#    <<: *common
-#    ports:
-#      - *tempo-port
-#    command:
-#      - '-target=metrics-generator'
-#      - *tempo-config
-#    depends_on:
-#      - minio
-#    # todo: cat + eof
+  promtail:
+    image: grafana/promtail:2.9.1
+    networks:
+      - backend
+    ports:
+      - '9080:9080'
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - loki-gateway
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/promtail
+        cat <<EOF > /etc/promtail/promtail.yaml
+        server:
+          http_listen_address: 0.0.0.0
+          http_listen_port: 9080
+          grpc_listen_port: 0
+          log_level: "info"
+        positions:
+            filename: /tmp/positions.yaml
+        clients:
+            - url: http://loki-gateway:80/loki/api/v1/push
+              tenant_id: docker
+        scrape_configs:
+          - job_name: containers
+            docker_sd_configs:
+              - host: unix:///var/run/docker.sock
+                refresh_interval: 15s
+                filters:
+                  - name: label
+                    values: ["promtail=true"]
+            pipeline_stages:
+              - docker: {}
+            relabel_configs:
+              - source_labels: ['__meta_docker_container_name']
+                regex: '/(.*)'
+                target_label: 'container'
+        EOF
+        /usr/bin/promtail -config.file /etc/promtail/promtail.yaml
+
+  loki-init:
+    image: &loki-image grafana/loki:2.9.1
+    <<: *common
+    user: root
+    volumes:
+      - ./.data/loki:/loki
+    entrypoint:
+      - 'chown'
+      - '10001:10001'
+      - '/loki'
+
+  loki-gateway:
+    image: nginx:1.19
+    <<: *common
+    ports:
+      - '8080:80'
+      - &loki-port '3100'
+    depends_on:
+      - loki-read
+      - loki-write
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        cat <<EOF > /etc/nginx/nginx.conf
+        user  nginx;
+        worker_processes  5;  ## Default: 1
+
+        events {
+          worker_connections   1000;
+        }
+
+        http {
+          resolver 127.0.0.11;
+
+          server {
+            listen             3100;
+
+            location = / {
+              return 200 'OK';
+              auth_basic off;
+            }
+
+            location = /api/prom/push {
+              proxy_pass       http://write:3100\$$request_uri;
+            }
+
+            location = /api/prom/tail {
+              proxy_pass       http://read:3100\$$request_uri;
+              proxy_set_header Upgrade \$$http_upgrade;
+              proxy_set_header Connection "upgrade";
+            }
+
+            location ~ /api/prom/.* {
+              proxy_pass       http://read:3100\$$request_uri;
+            }
+
+            location = /loki/api/v1/push {
+              proxy_pass       http://write:3100\$$request_uri;
+            }
+
+            location = /loki/api/v1/tail {
+              proxy_pass       http://read:3100\$$request_uri;
+              proxy_set_header Upgrade \$$http_upgrade;
+              proxy_set_header Connection "upgrade";
+            }
+
+            location ~ /loki/api/.* {
+              proxy_pass       http://read:3100\$$request_uri;
+            }
+          }
+        }
+        EOF
+        /docker-entrypoint.sh nginx -g "daemon off;"
+
+  loki-frontend:
+    image: *loki-image
+    <<: *common
+    volumes:
+      - ./loki.yaml:/etc/loki/loki.yaml
+    ports:
+      - *loki-port
+    command:
+      - '-target=query-frontend'
+      - &loki-config '-config.file=/etc/loki/loki.yaml'
+      - '-frontend.downstream-url=http://loki-read:3100'
+    deploy:
+      mode: replicated
+      replicas: 2
+
+  loki-read:
+    image: *loki-image
+    <<: *common
+    volumes:
+      - ./loki.yaml:/etc/loki/loki.yaml
+    ports:
+      - *loki-port
+      - &loki-ml-port '7946'
+    command:
+      - '-target=read'
+      - *loki-config
+    deploy:
+      mode: replicated
+      replicas: 3
+
+  loki-write:
+    image: *loki-image
+    <<: *common
+    volumes:
+      - ./loki.yaml:/etc/loki/loki.yaml
+    ports:
+      - *loki-port
+      - *loki-ml-port
+    command:
+      - '-target=write'
+      - *loki-config
+    deploy:
+      mode: replicated
+      replicas: 3
+
+  tempo-distributor:
+    image: &tempo-image grafana/tempo:2.2.3
+    <<: *common
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - &tempo-port '3200:3200'
+      - "4317:4317"        # otlp grpc
+      - "4318:4318"        # otlp http
+    command:
+      - '-target=distributor'
+      - &tempo-config '-config.file=/etc/tempo.yaml'
+    depends_on:
+      - minio
+
+  tempo-ingester-0:
+    image: *tempo-image
+    <<: *common
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - *tempo-port
+    command:
+      - '-target=ingester'
+      - *tempo-config
+    depends_on:
+      - tempo-distributor
+
+  tempo-ingester-1:
+    image: *tempo-image
+    <<: *common
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - *tempo-port
+    command:
+      - '-target=ingester'
+      - *tempo-config
+    depends_on:
+      - tempo-distributor
+
+  tempo-ingester-2:
+    image: *tempo-image
+    <<: *common
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - *tempo-port
+    command:
+      - '-target=ingester'
+      - *tempo-config
+    depends_on:
+      - tempo-distributor
+
+  tempo-query-frontend:
+    image: *tempo-image
+    <<: *common
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - "3200:3200"
+    command:
+      - '-target=query-frontend'
+      - *tempo-config
+    depends_on:
+      - minio
+
+  tempo-querier:
+    image: *tempo-image
+    <<: *common
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - *tempo-port
+    command:
+      - '-target=querier'
+      - *tempo-config
+    depends_on:
+      - minio
+      - tempo-query-frontend
+
+  tempo-compactor:
+    image: *tempo-image
+    <<: *common
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - *tempo-port
+    command:
+      - '-target=compactor'
+      - *tempo-config
+    depends_on:
+      - minio
+
+  tempo-metrics-generator:
+    image: *tempo-image
+    <<: *common
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+    ports:
+      - *tempo-port
+    command:
+      - '-target=metrics-generator'
+      - *tempo-config
+    depends_on:
+      - minio
