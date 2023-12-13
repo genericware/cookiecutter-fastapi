@@ -1,7 +1,10 @@
+import logging
 import secrets
+import sys
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
+from loguru import logger
 from pydantic import AnyHttpUrl, Field, PostgresDsn, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -37,7 +40,7 @@ class Settings(BaseSettings):
     uvicorn_host: str
     uvicorn_port: int
     uvicorn_workers: int
-    uvicorn_log_level: Literal["critical", "error", "warning", "info", "debug", "trace"]
+    uvicorn_log_config: dict[str, Any] | None = Field(None)
     uvicorn_loop: Literal["none", "auto", "asyncio", "uvloop"]
     uvicorn_http: Literal["auto", "h11", "httptools"]
     uvicorn_ws: Literal["auto", "none", "websockets"]
@@ -79,6 +82,7 @@ class Settings(BaseSettings):
     sqlalchemy_dsn: PostgresDsn | str | None = Field(None)
     loguru_format: str
     loguru_level: str
+    loguru_serialize: bool
     prometheus_instrumentator_should_group_status_codes: bool
     prometheus_instrumentator_should_ignore_untemplated: bool
     prometheus_instrumentator_should_respect_env_var: bool
@@ -90,9 +94,9 @@ class Settings(BaseSettings):
     prometheus_instrumentator_inprogress_labels: bool
     prometheus_instrumentator_include_in_schema: bool
     prometheus_instrumentator_should_gzip: bool
-    # otel_service_name: str
-    # otel_traces_exporter: str
-    # otel_metrics_exporters: str
+    otel_service_name: str
+    otel_metrics_exporter: str
+    otel_traces_exporter: str
     otel_instrumentation_http_capture_headers_server_request: str
     otel_instrumentation_http_capture_headers_server_response: str
 
@@ -119,6 +123,98 @@ class Settings(BaseSettings):
             port=info.data["sqlalchemy_port"],
             path=info.data["sqlalchemy_path"],
         )
+
+    @field_validator("uvicorn_log_config", mode="before")
+    @classmethod
+    def build_uvicorn_logging_config(
+        cls, v: str | None, _: ValidationInfo
+    ) -> dict[str, Any]:
+        """
+        Build uvicorn logging dictConfig.
+
+        :param v:
+        :param _:
+        :return:
+        """
+        if isinstance(v, dict):
+            return v
+
+        return {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "formatters": {
+                "default": {
+                    "()": "uvicorn.logging.DefaultFormatter",
+                    "fmt": "%(levelprefix)s %(message)s",
+                    "use_colors": None,
+                },
+                "access": {
+                    "()": "uvicorn.logging.AccessFormatter",
+                    "fmt": "%(levelprefix)s "
+                    "%(client_addr)s - "
+                    '"%(request_line)s" '
+                    "%(status_code)s",
+                },
+            },
+            "loggers": {
+                "uvicorn": {"level": "INFO"},
+                "uvicorn.error": {"level": "INFO"},
+                "uvicorn.access": {"level": "INFO", "propagate": False},
+            },
+        }
+
+
+class InterceptHandler(logging.Handler):
+    """
+    Default handler from examples in loguru docs.
+
+    see: https://loguru.readthedocs.io/en/stable/overview.html#entirely-compatible-with-standard-logging
+    """
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """
+        Emit a record.
+
+        :param record:
+        :return:
+        """
+        # Get corresponding Loguru level if it exists
+        try:
+            level = logger.level(record.levelname).name
+        except ValueError:
+            level = str(record.levelno)
+
+        # Find caller from where originated the logged message
+        frame, depth = logging.currentframe(), 2
+        while frame.f_code.co_filename == logging.__file__:
+            if frame.f_back is None:
+                # todo: mypy - define behavior when f_back=None
+                ...
+            else:
+                frame = frame.f_back
+            depth += 1
+
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
+
+
+def setup_logging(log_level: str, json_logs: bool) -> None:
+    """
+    Configure logging using loguru.
+
+    :param log_level:
+    :param json_logs:
+    :return:
+    """
+    logging.root.handlers = [InterceptHandler()]
+    logging.root.setLevel(log_level)
+
+    for name in logging.root.manager.loggerDict.keys():
+        logging.getLogger(name=name).handlers = []
+        logging.getLogger(name=name).propagate = True
+
+    logger.configure(handlers=[{"sink": sys.stdout, "serialize": json_logs}])
 
 
 settings = Settings()

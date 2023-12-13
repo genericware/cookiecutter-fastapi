@@ -28,6 +28,8 @@ services:
       - '8000:8000'
     env_file:
       - .env.development
+    environment:
+      - LOGURU_SERIALIZE=True
     depends_on:
 #      - keycloak
       - postgres
@@ -263,7 +265,31 @@ services:
                   - name: label
                     values: ["promtail=true"]
             pipeline_stages:
-              - docker: {}
+            - docker: {}
+            - json:
+                expressions:
+                  log: log
+                  stream: stream
+                  time: time
+            - match:
+                selector: '{instance=~"gi-app-1"}'
+                stages:
+                  - json:
+                      expressions:
+                        record: record
+                      source: log
+                  - json:
+                      expressions:
+                        level: level
+                      source: record
+                  - json:
+                      expressions:
+                        name: name
+                      source: level
+                  - labels:
+                      level: level
+                  - output:
+                      source: log
             relabel_configs:
               - source_labels: ['__meta_docker_container_name']
                 regex: '/(.*)'
@@ -296,50 +322,76 @@ services:
       - -euc
       - |
         cat <<EOF > /etc/nginx/nginx.conf
-        user  nginx;
-        worker_processes  5;  ## Default: 1
+        error_log  /dev/stderr;
+        pid        /tmp/nginx.pid;
+        worker_rlimit_nofile 8192;
 
         events {
-          worker_connections   1000;
+            worker_connections  4096;  ## Default: 1024
         }
 
         http {
-          resolver 127.0.0.11;
+          default_type application/octet-stream;
+          log_format main '\$$remote_addr - \$$remote_user [\$$time_local] \$$status '
+                          '"\$$request" \$$body_bytes_sent "\$$http_referer" '
+                          '"\$$http_user_agent" "\$$http_x_forwarded_for"';
+          access_log   /dev/stderr  main;
+          sendfile     on;
+          tcp_nopush   on;
+
+          upstream read {
+            server loki-read:3100;
+          }
+
+          upstream write {
+            server loki-write:3100;
+          }
+
+          upstream cluster {
+            server loki-read:3100;
+            server loki-write:3100;
+          }
+
+          upstream query-frontend {
+            server loki-frontend:3100;
+          }
 
           server {
-            listen             3100;
+            listen 80;
+            listen 3100;
 
-            location = / {
-              return 200 'OK';
-              auth_basic off;
+            location = /ring {
+                proxy_pass       http://cluster\$$request_uri;
             }
 
-            location = /api/prom/push {
-              proxy_pass       http://write:3100\$$request_uri;
+            location = /memberlist {
+                proxy_pass       http://cluster\$$request_uri;
             }
 
-            location = /api/prom/tail {
-              proxy_pass       http://read:3100\$$request_uri;
-              proxy_set_header Upgrade \$$http_upgrade;
-              proxy_set_header Connection "upgrade";
+            location = /config {
+                proxy_pass       http://cluster\$$request_uri;
             }
 
-            location ~ /api/prom/.* {
-              proxy_pass       http://read:3100\$$request_uri;
+            location = /metrics {
+                proxy_pass       http://cluster\$$request_uri;
+            }
+
+            location = /ready {
+                proxy_pass       http://cluster\$$request_uri;
             }
 
             location = /loki/api/v1/push {
-              proxy_pass       http://write:3100\$$request_uri;
+                proxy_pass       http://write\$$request_uri;
             }
 
             location = /loki/api/v1/tail {
-              proxy_pass       http://read:3100\$$request_uri;
-              proxy_set_header Upgrade \$$http_upgrade;
-              proxy_set_header Connection "upgrade";
+                proxy_pass       http://read\$$request_uri;
+                proxy_set_header Upgrade \$$http_upgrade;
+                proxy_set_header Connection "upgrade";
             }
 
             location ~ /loki/api/.* {
-              proxy_pass       http://read:3100\$$request_uri;
+                proxy_pass       http://query-frontend\$$request_uri;
             }
           }
         }

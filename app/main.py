@@ -1,15 +1,15 @@
-import sys
-
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from loguru import logger
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from app import __version__
 from app.api.v1 import routers as api_v1
-from app.config import settings
+from app.config import settings, setup_logging
+
+# logging
+setup_logging(log_level=settings.loguru_level, json_logs=settings.loguru_serialize)
 
 # app
 app = FastAPI(
@@ -52,16 +52,12 @@ FastAPIInstrumentor.instrument_app(app)
 app.include_router(api_v1.router)
 
 if __name__ == "__main__":
-    # loguru
-    logger.add(sys.stderr, format=settings.loguru_format, level=settings.loguru_level)
-
-    # uvicorn
     uvicorn.run(
         app=app,
         host=settings.uvicorn_host,
         port=settings.uvicorn_port,
         workers=settings.uvicorn_workers,
-        log_level=settings.uvicorn_log_level,
+        log_config=settings.uvicorn_log_config,
         loop=settings.uvicorn_loop,
         http=settings.uvicorn_http,
         ws=settings.uvicorn_ws,

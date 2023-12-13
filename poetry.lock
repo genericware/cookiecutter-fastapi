@@ -291,13 +291,13 @@ tests-no-zope = ["cloudpickle", "hypothesis", "mypy (>=1.1.1)", "pympler", "pyte
 
 [[package]]
 name = "babel"
-version = "2.13.1"
+version = "2.14.0"
 description = "Internationalization utilities"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "Babel-2.13.1-py3-none-any.whl", hash = "sha256:7077a4984b02b6727ac10f1f7294484f737443d7e2e66c5e4380e41a3ae0b4ed"},
-    {file = "Babel-2.13.1.tar.gz", hash = "sha256:33e0952d7dd6374af8dbf6768cc4ddf3ccfefc244f9986d4074704f2fbd18900"},
+    {file = "Babel-2.14.0-py3-none-any.whl", hash = "sha256:efb1a25b7118e67ce3a259bed20545c29cb68be8ad2c784c83689981b7a57287"},
+    {file = "Babel-2.14.0.tar.gz", hash = "sha256:6919867db036398ba21eb5c7a0f6b28ab8cbc3ae7a73a44ebe34ae74a4e7d363"},
 ]
 
 [package.extras]
@@ -1682,13 +1682,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "locust"
-version = "2.19.1"
+version = "2.20.0"
 description = "Developer friendly load testing framework"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "locust-2.19.1-py3-none-any.whl", hash = "sha256:152d6c9b1d8b842422a9ef352d13529d337d5c4e1e0c0a3e0827c1b5eafb903d"},
-    {file = "locust-2.19.1.tar.gz", hash = "sha256:5c21609b1395833dc0b4bb3ddaaf709a88f6e70950aefce86e11eb5944fe9217"},
+    {file = "locust-2.20.0-py3-none-any.whl", hash = "sha256:8092dde31c4cfb43b9b40470ffc7c5f95b3a491dfcb813bb50567edec28451dc"},
+    {file = "locust-2.20.0.tar.gz", hash = "sha256:b6f78af64bc5066babe54836f796469906cd606b01f34ee788986d0b1fbac99a"},
 ]
 
 [package.dependencies]
@@ -3418,6 +3418,23 @@ anyio = ">=3.4.0,<5"
 full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyaml"]
 
 [[package]]
+name = "structlog"
+version = "23.2.0"
+description = "Structured Logging for Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "structlog-23.2.0-py3-none-any.whl", hash = "sha256:16a167e87b9fa7fae9a972d5d12805ef90e04857a93eba479d4be3801a6a1482"},
+    {file = "structlog-23.2.0.tar.gz", hash = "sha256:334666b94707f89dbc4c81a22a8ccd34449f0201d5b1ee097a030b577fa8c858"},
+]
+
+[package.extras]
+dev = ["structlog[tests,typing]"]
+docs = ["furo", "myst-parser", "sphinx", "sphinx-notfound-page", "sphinxcontrib-mermaid", "twisted"]
+tests = ["freezegun (>=0.2.8)", "pretend", "pytest (>=6.0)", "pytest-asyncio (>=0.17)", "simplejson"]
+typing = ["mypy (>=1.4)", "rich", "twisted"]
+
+[[package]]
 name = "termcolor"
 version = "2.4.0"
 description = "ANSI color formatting for output in terminal"
@@ -4067,4 +4084,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "f68fa7d7fe0d633a904f56ebf9c5389d519e83197329ddd9b5f275d28b3abd24"
+content-hash = "e89b53605d0ee2affaee7d3bfacb26a656551afb7721c4ab28f5af4d18acac06"

@@ -183,9 +183,9 @@ fastapi-users==12.1.2 ; python_version >= "3.10" and python_version < "3.12" \
 fastapi-users[oauth,sqlalchemy]==12.1.2 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:768e3b17b9b89b5f5d3c303afefd69874da0fc97ebac16a86167d4c8d414d479 \
     --hash=sha256:9a9b44e0917c483aaba2bf80ea488b4ba6475b0fb24e2abfaf21e0b5c5db59bf
-fastapi==0.104.1 ; python_version >= "3.10" and python_version < "3.12" \
-    --hash=sha256:752dc31160cdbd0436bb93bad51560b57e525cbb1d4bbf6f4904ceee75548241 \
-    --hash=sha256:e5e4540a7c5e1dcfbbcf5b903c234feddcdcd881f191977a1c5dfd917487e7ae
+fastapi==0.105.0 ; python_version >= "3.10" and python_version < "3.12" \
+    --hash=sha256:4d12838819aa52af244580675825e750ad67c9df4614f557a769606af902cf22 \
+    --hash=sha256:f19ebf6fdc82a3281d10f2cb4774bdfa90238e3b40af3525a0c09fd08ad1c480
 greenlet==3.0.2 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:006c1028ac0cfcc4e772980cfe73f5476041c8c91d15d64f52482fc571149d46 \
     --hash=sha256:0acadbc3f72cb0ee85070e8d36bd2a4673d2abd10731ee73c10222cf2dd4713c \
@@ -721,9 +721,15 @@ sqlalchemy[asyncio]==2.0.23 ; python_version >= "3.10" and python_version < "3.1
     --hash=sha256:f48ed89dd11c3c586f45e9eec1e437b355b3b6f6884ea4a4c3111a3358fd0c18 \
     --hash=sha256:f508ba8f89e0a5ecdfd3761f82dda2a3d7b678a626967608f4273e0dba8f07ac \
     --hash=sha256:fd54601ef9cc455a0c61e5245f690c8a3ad67ddb03d3b91c361d076def0b4c60
+sqlmodel==0.0.14 ; python_version >= "3.10" and python_version < "3.12" \
+    --hash=sha256:0bff8fc94af86b44925aa813f56cf6aabdd7f156b73259f2f60692c6a64ac90e \
+    --hash=sha256:accea3ff5d878e41ac439b11e78613ed61ce300cfcb860e87a2d73d4884cbee4
 starlette==0.27.0 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:6a6b0d042acb8d469a01eba54e9cda6cbd24ac602c4cd016723117d6a7e73b75 \
     --hash=sha256:918416370e846586541235ccd38a474c08b80443ed31c578a418e2209b3eef91
+structlog==23.2.0 ; python_version >= "3.10" and python_version < "3.12" \
+    --hash=sha256:16a167e87b9fa7fae9a972d5d12805ef90e04857a93eba479d4be3801a6a1482 \
+    --hash=sha256:334666b94707f89dbc4c81a22a8ccd34449f0201d5b1ee097a030b577fa8c858
 typing-extensions==4.9.0 ; python_version >= "3.10" and python_version < "3.12" \
     --hash=sha256:23478f88c37f27d76ac8aee6c905017a143b0b1b886c3c9f66bc2fd94f9f5783 \
     --hash=sha256:af72aea155e91adfc61c3ae9e0e342dbc0cba726d6cba4b6c72c1f34e47291cd
