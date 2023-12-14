@@ -194,6 +194,10 @@ services:
             static_configs:
               - targets:
                   - "prometheus:9090"
+          - job_name: "app"
+            static_configs:
+              - targets:
+                  - "app:8000"
           - job_name: "postgres-exporter"
             static_configs:
               - targets:
@@ -265,31 +269,20 @@ services:
                   - name: label
                     values: ["promtail=true"]
             pipeline_stages:
-            - docker: {}
-            - json:
-                expressions:
-                  log: log
-                  stream: stream
-                  time: time
-            - match:
-                selector: '{instance=~"gi-app-1"}'
-                stages:
-                  - json:
-                      expressions:
-                        record: record
-                      source: log
-                  - json:
-                      expressions:
+              - match:
+                  selector: '{container="gi-app-1"}'
+                  stages:
+                    - json:
+                        expressions:
+                          record: record
+                    - json:
+                        expressions:
+                          level: level.name
+                        source: record
+                    - labels:
                         level: level
-                      source: record
-                  - json:
-                      expressions:
-                        name: name
-                      source: level
-                  - labels:
-                      level: level
-                  - output:
-                      source: log
+                    - output:
+                        source: record
             relabel_configs:
               - source_labels: ['__meta_docker_container_name']
                 regex: '/(.*)'
