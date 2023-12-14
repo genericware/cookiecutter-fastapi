@@ -97,6 +97,7 @@ class Settings(BaseSettings):
     otel_service_name: str
     otel_metrics_exporter: str
     otel_traces_exporter: str
+    otel_exporter_otlp_traces_endpoint: str
     otel_instrumentation_http_capture_headers_server_request: str
     otel_instrumentation_http_capture_headers_server_response: str
 
