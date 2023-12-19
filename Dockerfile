@@ -62,6 +62,6 @@ FROM base AS runtime
 COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
 WORKDIR /opt/generic-infrastructure
 COPY ./app/ /opt/generic-infrastructure/app
-USER $USERNAME
+USER $USER
 ENTRYPOINT ["tini", "--", "uvicorn", "app.main:app"]
 EXPOSE $UVICORN_PORT
