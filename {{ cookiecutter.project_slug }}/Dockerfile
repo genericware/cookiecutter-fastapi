@@ -61,7 +61,7 @@ RUN --mount=type=cache,target="${POETRY_CACHE_DIR}" poetry install --without dev
 FROM base AS runtime
 COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
 WORKDIR /opt/generic-infrastructure
-COPY ./app/ /opt/generic-infrastructure/app
+COPY src/app/ /opt/generic-infrastructure/app
 USER $USER
 ENTRYPOINT ["tini", "--", "uvicorn", "app.main:app"]
 EXPOSE $UVICORN_PORT
