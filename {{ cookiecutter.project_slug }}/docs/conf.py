@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "cookiecutter-fastapi"
+project = "{{ {{ cookiecutter.package_name }}.package_slug }}-fastapi"
 copyright = "2023, Andrew Linzie"
 author = "Andrew Linzie"
 release = "0.1.0"
