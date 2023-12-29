@@ -6,15 +6,15 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'cookiecutter-fastapi'
-copyright = '2023, Andrew Linzie'
-author = 'Andrew Linzie'
-release = '0.1.0'
+project = '{{ cookiecutter.sphinx_project }}'
+copyright = '{{ cookiecutter.sphinx_copyright }}'
+author = '{{ cookiecutter.sphinx_author }}'
+release = '{{ cookiecutter.sphinx_release }}'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["myst_parser"]
+extensions = ["sphinx_rtd_theme", "myst_parser"]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
@@ -24,5 +24,5 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
