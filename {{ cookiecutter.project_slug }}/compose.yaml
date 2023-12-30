@@ -20,14 +20,14 @@ services:
 
   app:
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
       target: runtime
     <<: *common
     ports:
       - '8000:8000'
     env_file:
-      - .env.development
+      - cookiecutter.project_slug
     environment:
       - LOGURU_SERIALIZE=True
     depends_on:

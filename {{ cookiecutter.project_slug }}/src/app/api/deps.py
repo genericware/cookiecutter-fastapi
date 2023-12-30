@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import async_session
 from app.models import User
-from app.models.user import OAuthAccount
+from src.app.models.user import OAuthAccount
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

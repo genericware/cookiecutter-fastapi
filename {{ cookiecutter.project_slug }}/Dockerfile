@@ -1,4 +1,4 @@
-FROM python:3.11-slim-bookworm AS base
+FROM python:3.10-slim-bookworm AS base
 LABEL maintainer="caerulescens <caerulescens.github@proton.me>"
 ARG USER=appuser
 ARG USER_GID=10001

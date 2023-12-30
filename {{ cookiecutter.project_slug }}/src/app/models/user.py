@@ -4,7 +4,7 @@ from fastapi_users_db_sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, relationship
 
-from app.db.base_class import Base
+from src.app.db.base_class import Base
 
 
 class OAuthAccount(SQLAlchemyBaseOAuthAccountTableUUID, Base):
