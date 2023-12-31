@@ -6,10 +6,10 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'cookiecutter-fastapi'
-copyright = '2023, Andrew Linzie'
-author = 'Andrew Linzie'
-release = '0.1.0'
+project = '{{ cookiecutter.sphinx_project }}'
+copyright = '{{ cookiecutter.sphinx_copyright }}'
+author = '{{ cookiecutter.sphinx_author }}'
+release = '{{ cookiecutter.sphinx_release }}'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
