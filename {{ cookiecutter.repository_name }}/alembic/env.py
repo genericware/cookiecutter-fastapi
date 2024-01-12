@@ -1,3 +1,4 @@
+# todo: config for sqlmodel
 import asyncio
 from logging.config import fileConfig
 

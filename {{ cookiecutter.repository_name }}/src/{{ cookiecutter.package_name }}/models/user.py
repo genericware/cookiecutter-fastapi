@@ -3,7 +3,6 @@ from fastapi_users_db_sqlalchemy import (
     SQLAlchemyBaseUserTableUUID,
 )
 from sqlalchemy.orm import Mapped, relationship
-
 from src.app.db.base_class import Base
 
 

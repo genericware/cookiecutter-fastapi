@@ -1,8 +1,15 @@
 FROM python:3.10-slim-bookworm AS base
 LABEL maintainer="caerulescens <caerulescens.github@proton.me>"
-ARG USER=appuser
+ARG HOST=0.0.0.0 \
+ARG PORT=8000 \
+ARG WORKERS=1 \
+ARG LOG_LEVEL=info \
+ARG BACKLOG=2048 \
+ARG TIMEOUT_KEEP_ALIVE=5 \
+ARG TIMEOUT_GRACEFUL_SHUTDOWN=30 \
+ARG USER=appuser \
 ARG USER_GID=10001
-ARG USER_UID=10000
+ARG USER_UID=10001
 ENV \
     # os
     TZ=UTC \
@@ -31,17 +38,17 @@ ENV \
     POETRY_VIRTUALENVS_IN_PROJECT=true \
     POETRY_VIRTUALENVS_CREATE=true \
     # uvicorn
-    UVICORN_HOST=0.0.0.0 \
-    UVICORN_PORT=8000 \
-    UVICORN_WORKERS=1 \
-    UVICORN_LOG_LEVEL=debug \
+    UVICORN_HOST=$HOST \
+    UVICORN_PORT=$PORT \
+    UVICORN_WORKERS=$WORKERS \
+    UVICORN_LOG_LEVEL=$LOG_LEVEL \
     UVICORN_LOOP=auto \
     UVICORN_HTTP=auto \
     UVICORN_WS=auto \
     UVICORN_INTERFACE=auto \
-    UVICORN_BACKLOG=2048 \
-    UVICORN_TIMEOUT_KEEP_ALIVE=5 \
-    UVICORN_TIMEOUT_GRACEFUL_SHUTDOWN=30
+    UVICORN_BACKLOG=$BACKLOG \
+    UVICORN_TIMEOUT_KEEP_ALIVE=$TIMEOUT_KEEP_ALIVE \
+    UVICORN_TIMEOUT_GRACEFUL_SHUTDOWN=$TIMEOUT_GRACEFUL_SHUTDOWN
 ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 RUN set -ex \
     && groupadd --system --gid "${USER_GID}" "${USER}" \
@@ -60,8 +67,8 @@ RUN --mount=type=cache,target="${POETRY_CACHE_DIR}" poetry install --without dev
 
 FROM base AS runtime
 COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
-WORKDIR /opt/generic-infrastructure
-COPY src/app/ /opt/generic-infrastructure/app
+WORKDIR /opt
+COPY src/{{ cookiecutter.package_name }}/ /opt/{{ cookiecutter.package_name }}
 USER $USER
-ENTRYPOINT ["tini", "--", "uvicorn", "app.main:app"]
-EXPOSE $UVICORN_PORT
+ENTRYPOINT ["tini", "--", "uvicorn", "{{ cookiecutter.package_name }}.main:app"]
+EXPOSE $PORT

@@ -1,3 +1,4 @@
+# todo: template
 name: gi
 
 networks:
@@ -31,37 +32,27 @@ services:
     environment:
       - LOGURU_SERIALIZE=True
     depends_on:
-#      - keycloak
+      - keycloak
       - postgres
       - redis
       - tempo-distributor
 
-#  keycloak:
-#    image: quay.io/keycloak/keycloak:23.0.1
-#    <<: *common
-#    ports:
-#      - '8080:8080'
-#    environment:
-#      - KEYCLOAK_ADMIN=admin
-#      - KEYCLOAK_ADMIN_PASSWORD=admin
-
-  postgres:
-    image: postgres:16
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.1
     <<: *common
     ports:
-      - '5432:5432'
+      - '8080:8080'
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
 
-  postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:v0.15.0
-    <<: *common
-    environment:
-      - DATA_SOURCE_URI=postgres?sslmode=disable
-      - DATA_SOURCE_USER=postgres
-      - DATA_SOURCE_PASS=postgres
+  # todo: mysql
+
+  # todo: mysql-exporter
+
+  # todo: mongodb
+
+  # todo: mongodb-exporter
 
   redis:
     image: redis:7
@@ -290,151 +281,168 @@ services:
         EOF
         /usr/bin/promtail -config.file /etc/promtail/promtail.yaml
 
-  loki-init:
-    image: &loki-image grafana/loki:2.9.1
-    <<: *common
-    user: root
-    volumes:
-      - ./.data/loki:/loki
-    entrypoint:
-      - 'chown'
-      - '10001:10001'
-      - '/loki'
 
-  loki-gateway:
-    image: nginx:1.19
+  loki:
+    image: grafana/loki:2.9.1
     <<: *common
     ports:
-      - '8080:80'
-      - &loki-port '3100'
-    depends_on:
-      - loki-read
-      - loki-write
+      - "3100:3100"
+    command:
+      - -config.file=/etc/loki/local-config.yaml
     entrypoint:
       - sh
       - -euc
       - |
-        cat <<EOF > /etc/nginx/nginx.conf
-        error_log  /dev/stderr;
-        pid        /tmp/nginx.pid;
-        worker_rlimit_nofile 8192;
-
-        events {
-            worker_connections  4096;  ## Default: 1024
-        }
-
-        http {
-          default_type application/octet-stream;
-          log_format main '\$$remote_addr - \$$remote_user [\$$time_local] \$$status '
-                          '"\$$request" \$$body_bytes_sent "\$$http_referer" '
-                          '"\$$http_user_agent" "\$$http_x_forwarded_for"';
-          access_log   /dev/stderr  main;
-          sendfile     on;
-          tcp_nopush   on;
-
-          upstream read {
-            server loki-read:3100;
-          }
-
-          upstream write {
-            server loki-write:3100;
-          }
-
-          upstream cluster {
-            server loki-read:3100;
-            server loki-write:3100;
-          }
-
-          upstream query-frontend {
-            server loki-frontend:3100;
-          }
-
-          server {
-            listen 80;
-            listen 3100;
-
-            location = /ring {
-                proxy_pass       http://cluster\$$request_uri;
-            }
-
-            location = /memberlist {
-                proxy_pass       http://cluster\$$request_uri;
-            }
-
-            location = /config {
-                proxy_pass       http://cluster\$$request_uri;
-            }
-
-            location = /metrics {
-                proxy_pass       http://cluster\$$request_uri;
-            }
-
-            location = /ready {
-                proxy_pass       http://cluster\$$request_uri;
-            }
-
-            location = /loki/api/v1/push {
-                proxy_pass       http://write\$$request_uri;
-            }
-
-            location = /loki/api/v1/tail {
-                proxy_pass       http://read\$$request_uri;
-                proxy_set_header Upgrade \$$http_upgrade;
-                proxy_set_header Connection "upgrade";
-            }
-
-            location ~ /loki/api/.* {
-                proxy_pass       http://query-frontend\$$request_uri;
-            }
-          }
-        }
+        cat <<EOF > /etc/loki/config.yaml
         EOF
-        /docker-entrypoint.sh nginx -g "daemon off;"
+        /usr/bin/loki -config.file=/etc/loki/local-config.yaml
 
-  loki-frontend:
-    image: *loki-image
-    <<: *common
-    volumes:
-      - ./loki.yaml:/etc/loki/loki.yaml
-    ports:
-      - *loki-port
-    command:
-      - '-target=query-frontend'
-      - &loki-config '-config.file=/etc/loki/loki.yaml'
-      - '-frontend.downstream-url=http://loki-read:3100'
-    deploy:
-      mode: replicated
-      replicas: 2
 
-  loki-read:
-    image: *loki-image
-    <<: *common
-    volumes:
-      - ./loki.yaml:/etc/loki/loki.yaml
-    ports:
-      - *loki-port
-      - &loki-ml-port '7946'
-    command:
-      - '-target=read'
-      - *loki-config
-    deploy:
-      mode: replicated
-      replicas: 3
-
-  loki-write:
-    image: *loki-image
-    <<: *common
-    volumes:
-      - ./loki.yaml:/etc/loki/loki.yaml
-    ports:
-      - *loki-port
-      - *loki-ml-port
-    command:
-      - '-target=write'
-      - *loki-config
-    deploy:
-      mode: replicated
-      replicas: 3
+#  loki-init:
+#    image: &loki-image grafana/loki:2.9.1
+#    <<: *common
+#    user: root
+#    volumes:
+#      - ./.data/loki:/loki
+#    entrypoint:
+#      - 'chown'
+#      - '10001:10001'
+#      - '/loki'
+#
+#  loki-gateway:
+#    image: nginx:1.19
+#    <<: *common
+#    ports:
+#      - '8080:80'
+#      - &loki-port '3100'
+#    depends_on:
+#      - loki-read
+#      - loki-write
+#    entrypoint:
+#      - sh
+#      - -euc
+#      - |
+#        cat <<EOF > /etc/nginx/nginx.conf
+#        error_log  /dev/stderr;
+#        pid        /tmp/nginx.pid;
+#        worker_rlimit_nofile 8192;
+#
+#        events {
+#            worker_connections  4096;  ## Default: 1024
+#        }
+#
+#        http {
+#          default_type application/octet-stream;
+#          log_format main '\$$remote_addr - \$$remote_user [\$$time_local] \$$status '
+#                          '"\$$request" \$$body_bytes_sent "\$$http_referer" '
+#                          '"\$$http_user_agent" "\$$http_x_forwarded_for"';
+#          access_log   /dev/stderr  main;
+#          sendfile     on;
+#          tcp_nopush   on;
+#
+#          upstream read {
+#            server loki-read:3100;
+#          }
+#
+#          upstream write {
+#            server loki-write:3100;
+#          }
+#
+#          upstream cluster {
+#            server loki-read:3100;
+#            server loki-write:3100;
+#          }
+#
+#          upstream query-frontend {
+#            server loki-frontend:3100;
+#          }
+#
+#          server {
+#            listen 80;
+#            listen 3100;
+#
+#            location = /ring {
+#                proxy_pass       http://cluster\$$request_uri;
+#            }
+#
+#            location = /memberlist {
+#                proxy_pass       http://cluster\$$request_uri;
+#            }
+#
+#            location = /config {
+#                proxy_pass       http://cluster\$$request_uri;
+#            }
+#
+#            location = /metrics {
+#                proxy_pass       http://cluster\$$request_uri;
+#            }
+#
+#            location = /ready {
+#                proxy_pass       http://cluster\$$request_uri;
+#            }
+#
+#            location = /loki/api/v1/push {
+#                proxy_pass       http://write\$$request_uri;
+#            }
+#
+#            location = /loki/api/v1/tail {
+#                proxy_pass       http://read\$$request_uri;
+#                proxy_set_header Upgrade \$$http_upgrade;
+#                proxy_set_header Connection "upgrade";
+#            }
+#
+#            location ~ /loki/api/.* {
+#                proxy_pass       http://query-frontend\$$request_uri;
+#            }
+#          }
+#        }
+#        EOF
+#        /docker-entrypoint.sh nginx -g "daemon off;"
+#
+#  loki-frontend:
+#    image: *loki-image
+#    <<: *common
+#    volumes:
+#      - ./loki.yaml:/etc/loki/loki.yaml
+#    ports:
+#      - *loki-port
+#    command:
+#      - '-target=query-frontend'
+#      - &loki-config '-config.file=/etc/loki/loki.yaml'
+#      - '-frontend.downstream-url=http://loki-read:3100'
+#    deploy:
+#      mode: replicated
+#      replicas: 2
+#
+#  loki-read:
+#    image: *loki-image
+#    <<: *common
+#    volumes:
+#      - ./loki.yaml:/etc/loki/loki.yaml
+#    ports:
+#      - *loki-port
+#      - &loki-ml-port '7946'
+#    command:
+#      - '-target=read'
+#      - *loki-config
+#    deploy:
+#      mode: replicated
+#      replicas: 3
+#
+#  loki-write:
+#    image: *loki-image
+#    <<: *common
+#    volumes:
+#      - ./loki.yaml:/etc/loki/loki.yaml
+#    ports:
+#      - *loki-port
+#      - *loki-ml-port
+#    command:
+#      - '-target=write'
+#      - *loki-config
+#    deploy:
+#      mode: replicated
+#      replicas: 3
 
   tempo-distributor:
     image: &tempo-image grafana/tempo:2.2.3

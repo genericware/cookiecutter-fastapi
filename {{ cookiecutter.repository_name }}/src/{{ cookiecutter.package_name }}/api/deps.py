@@ -4,10 +4,10 @@ from uuid import UUID
 from fastapi import Depends
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.app.models.user import OAuthAccount
 
 from app.db.session import async_session
 from app.models import User
-from src.app.models.user import OAuthAccount
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

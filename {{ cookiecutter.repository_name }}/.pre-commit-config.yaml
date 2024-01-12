@@ -1,6 +1,3 @@
-default_language_version:
-  python: python3.10
-
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
@@ -28,7 +25,7 @@ repos:
       - id: fix-byte-order-marker
       - id: mixed-line-ending
       - id: no-commit-to-branch
-        args: [ --branch, master, --branch, develop]
+        args: [--branch, master, --branch, develop]
       - id: trailing-whitespace
 
   - repo: https://github.com/pre-commit/pygrep-hooks
@@ -50,7 +47,6 @@ repos:
     hooks:
       - id: poetry-check
       - id: poetry-lock
-      - id: poetry-export
       - id: poetry-install
 
   - repo: https://github.com/psf/black
@@ -62,8 +58,9 @@ repos:
     rev: v0.1.7
     hooks:
       - id: ruff
-        args: [ --fix ]
+        args: [--fix]
 
+  # todo: config
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.7.1
     hooks:

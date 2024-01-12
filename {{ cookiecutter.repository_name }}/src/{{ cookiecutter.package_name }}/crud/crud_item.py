@@ -4,10 +4,10 @@ from uuid import UUID
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.app.models.item import Item
 
 from app import models, schemas
 from app.crud.base import CRUDBase
-from src.app.models.item import Item
 from app.schemas.item import ItemCreate, ItemUpdate
 
 

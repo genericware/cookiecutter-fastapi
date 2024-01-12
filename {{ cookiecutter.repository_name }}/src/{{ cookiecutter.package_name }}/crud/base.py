@@ -5,7 +5,6 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.app.db.base_class import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
