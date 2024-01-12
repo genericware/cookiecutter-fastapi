@@ -55,12 +55,11 @@ repos:
       - id: black
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.7
+    rev: v0.1.12
     hooks:
       - id: ruff
         args: [--fix]
 
-  # todo: config
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.7.1
     hooks:
