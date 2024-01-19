@@ -36,9 +36,9 @@ image:
 docker build . -t cookiecutter-fastapi-development:{{ cookiecutter.version }}
 ```
 
-## run
+## usage
 
-app:
+run:
 ```shell
 python -m {{ cookiecutter.package_name }}
 ```
@@ -55,16 +55,6 @@ docker compose up
 
 test:
 ```shell
-pytest .
-```
-
-coverage:
-```shell
-coverage run -m pytest && coverage report -m
-```
-
-matrix:
-```shell
 tox run
 ```
 
@@ -76,19 +66,4 @@ make -C docs html
 check:
 ```shell
 pre-commit run
-```
-
-format:
-```shell
-black .
-```
-
-lint:
-```shell
-ruff .
-```
-
-type:
-```shell
-mypy .
 ```
