@@ -26,7 +26,7 @@ poetry install --without dev
 ## build
 
 > [!IMPORTANT]
-> `src/cookiecutter-fastapi` is not currently used.
+> `src/cookiecutter_fastapi` is not currently used.
 
 package:
 ```shell
