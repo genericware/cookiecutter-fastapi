@@ -1,25 +1,43 @@
+# todo: template
 [tool.poetry]
-name = "cookiecutter-fastapi"
+name = "app"
 version = "0.1.0"
-description = ""
+description = "cookiecutter template for fastapi"
 license = "MIT"
 authors = ["caerulescens <caerulescens.github@proton.me>"]
 maintainers = ["caerulescens <caerulescens.github@proton.me>"]
 readme = "README.md"
-packages = [{include = "cookiecutter_fastapi", from = "src"}]
+packages = [{include = "{{ cookiecutter.package_slug }}", from = "src"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
-cookiecutter = "^2.5.0"
+uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
+uvloop = "^0.19.0"
+orjson = "^3.9.10"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+fastapi = "^0.105.0"
+fastapi-users = {extras = ["oauth", "sqlalchemy"], version = "^12.1.2"}
 pydantic = "^2.5.2"
 pydantic-settings = "^2.1.0"
+sqlmodel = "^0.0.14"
+sqlalchemy = "^2.0.23"
+alembic = "^1.13.0"
+asyncpg = "^0.29.0"
+loguru = "^0.7.2"
+prometheus-fastapi-instrumentator = "^6.1.0"
+opentelemetry-instrumentation-fastapi = "^0.42b0"
+opentelemetry-exporter-otlp = "^1.21.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
 pytest-asyncio = "^0.21.1"
 pytest-cov = "^4.1.0"
 pytest-sugar = "^0.9.7"
-coverage = {extras = ["toml"], version = "^7.3.2"}
+pytest-async-sqlalchemy = "^0.2.0"
+pytest-postgresql = "^5.0.0"
+psycopg = {extras = ["binary"], version = "^3.1.11"}
+aioresponses = "^0.7.4"
+coverage = {extras = ["toml"], version = "^7.3.1"}
 tox = "^4.11.4"
 sphinx = "^7.2.6"
 sphinx_rtd_theme = "2.0.0"
@@ -34,16 +52,24 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 branch = true
+concurrency = ["gevent"]
+dynamic_context = "test_function"
+
+[tool.coverage.report]
+fail_under = 50
+
+[tool.coverage.html]
+directory = "coverage_html_report"
 
 [tool.black]
 line-length = 88
-target-version = ["py310", "py311", "py312"]
+target-version = ["py310", "py311"]
 include = '\.pyi?$'
 
 [tool.ruff]
 line-length = 88
 target-version = "py310"
-src = ["src", "tests"]
+src = ["src", "tests", "docs"]
 select = ["F", "E", "W", "C90", "S", "I", "N", "D", "UP"]
 ignore = ["D100", "D104", "D106"]
 
@@ -51,8 +77,8 @@ ignore = ["D100", "D104", "D106"]
 convention = "pep257"
 
 [tool.mypy]
-python_version = "3.10"
-files = ["src", "tests"]
+python_version = "3.11"
+files = ["src", "tests", "docs"]
 plugins = ["pydantic.mypy"]
 follow_imports = "silent"
 warn_redundant_casts = true

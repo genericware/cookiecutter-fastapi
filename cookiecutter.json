@@ -1,0 +1,14 @@
+{
+  "project_name": "Example Project Name",
+  "project_description": "Example project description.",
+  "repository_name": "{{ cookiecutter.project_name | lower | replace(' ','-') }}",
+  "package_name": "{{ cookiecutter.project_name| lower | replace(' ','_') | replace('-','_') }}",
+  "distribution_name": "{{ cookiecutter.package_name | replace('_','-') }}",
+  "version": "0.1.0",
+  "test_matrix": ["yes", "no"],
+  "pre_commit": ["yes", "no"],
+  "sphinx_docs": ["yes", "no"],
+  "sphinx_theme": ["sphinx-rtd-theme"],
+  "sphinx_doctest": ["no", "yes"],
+  "__test_matrix_options": {"yes":  true, "no":  false}
+}
