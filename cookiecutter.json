@@ -1,6 +1,6 @@
 {
-  "project_name": "",
-  "project_description": "",
+  "project_name": "Example Project Name",
+  "project_description": "Example project description.",
   "repository_name": "{{ cookiecutter.project_name | lower | replace(' ','-') }}",
   "package_name": "{{ cookiecutter.project_name| lower | replace(' ','_') | replace('-','_') }}",
   "distribution_name": "{{ cookiecutter.package_name | replace('_','-') }}",

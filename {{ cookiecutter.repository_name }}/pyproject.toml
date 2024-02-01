@@ -1,5 +1,4 @@
-# todo: review
-# todo: fastapi-users template
+# todo: template
 [tool.poetry]
 name = "app"
 version = "0.1.0"

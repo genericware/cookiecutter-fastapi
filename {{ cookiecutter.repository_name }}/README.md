@@ -53,6 +53,18 @@ stack:
 docker compose up
 ```
 
+[//]: # (How to recreate `alembic` database migrations:)
+[//]: # (1. Create an environment: `alembic init --template async alembic`)
+[//]: # (2. Edit the alembic.ini file to set `sqlalchemy.url`)
+[//]: # (3. Create a migration script: `alembic revision -m "init_db"`)
+[//]: # (4. Run first migration: `alembic upgrade head`)
+[//]: # (see: https://alembic.sqlalchemy.org/en/latest/index.html)
+migrations:
+```shell
+alembic revision -m "<message>"
+alembic upgrade head
+```
+
 test:
 ```shell
 tox run

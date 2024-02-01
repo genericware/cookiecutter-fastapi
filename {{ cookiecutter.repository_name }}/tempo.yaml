@@ -1,4 +1,4 @@
-# todo: move file into docker compose by dividing configurations among containers with entrypoint + cat/eof
+# todo: move into docker-compose.yaml
 server:
   http_listen_port: 3200
 

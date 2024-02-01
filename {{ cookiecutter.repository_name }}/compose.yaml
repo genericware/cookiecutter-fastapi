@@ -1,5 +1,4 @@
-# todo: template
-name: gi
+name: {{ cookiecutter.distribution_name }}
 
 networks:
   backend:
@@ -28,7 +27,7 @@ services:
     ports:
       - '8000:8000'
     env_file:
-      - cookiecutter.project_slug
+      - .env.development
     environment:
       - LOGURU_SERIALIZE=True
     depends_on:
